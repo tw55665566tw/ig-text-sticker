@@ -46,9 +46,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;
 .rz-handle.bl{bottom:-13px;left:-13px;cursor:nesw-resize}.rz-handle.br{bottom:-13px;right:-13px;cursor:nwse-resize}
 .rz-handle.tc{top:-13px;left:50%;margin-left:-13px;cursor:ns-resize}.rz-handle.bc{bottom:-13px;left:50%;margin-left:-13px;cursor:ns-resize}
 .rz-handle.ml{top:50%;margin-top:-13px;left:-13px;cursor:ew-resize}.rz-handle.mr{top:50%;margin-top:-13px;right:-13px;cursor:ew-resize}
-/* Text input area - separate from preview */
-#textInputWrap{flex-shrink:0;padding:6px 10px;background:#0d1117;border-bottom:1px solid #1e2a4a}
-#textInput{width:100%;background:#16213e;border:1px solid #334;border-radius:10px;color:#fff;font-size:17px;padding:10px 14px;resize:none;outline:none;line-height:1.5;min-height:52px;max-height:90px;overflow-y:auto;caret-color:#818cf8;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+/* Text input overlay on canvas */
+#textInput{position:absolute;background:transparent;border:none;color:transparent;caret-color:#fff;font-size:16px;resize:none;z-index:3;padding:0;outline:none;overflow:hidden;pointer-events:auto;touch-action:manipulation;-webkit-text-fill-color:transparent}
 
 /* Tool bar */
 #toolBar{flex-shrink:0;display:flex;background:#0f1529;border-top:1px solid #1e2a4a;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 4px}
@@ -133,14 +132,10 @@ input[type="color"]{width:44px;height:40px;border:none;border-radius:8px;cursor:
   </div>
 </div>
 
-<!-- Text Input -->
-<div id="textInputWrap">
-  <textarea id="textInput" rows="2" placeholder="點此輸入文字，Enter 換行...">水電維修找我們</textarea>
-</div>
-
 <!-- Preview -->
 <div id="previewArea">
   <canvas id="previewCanvas"></canvas>
+  <textarea id="textInput">水電維修找我們</textarea>
   <div id="resizeBox">
     <div class="rz-drag" id="rzDrag"></div>
     <div class="rz-handle tl" data-dir="tl"></div><div class="rz-handle tc" data-dir="tc"></div><div class="rz-handle tr" data-dir="tr"></div>
@@ -587,9 +582,30 @@ function initApp(){
   // Text input
   document.getElementById('textInput').addEventListener('input',function(e){saveHistory();state.text=e.target.value;render()});
 
-  // Auto-resize textarea
+  // Sync textarea position/style to match canvas text
   var textInput=document.getElementById('textInput');
-  textInput.addEventListener('input',function(){this.style.height='52px';this.style.height=Math.min(this.scrollHeight,90)+'px'});
+  function syncTextarea(){
+    var canvas=document.getElementById('previewCanvas'),cR=canvas.getBoundingClientRect(),pR=document.getElementById('previewArea').getBoundingClientRect();
+    var ti=textInput;
+    ti.style.left=(cR.left-pR.left)+'px';ti.style.top=(cR.top-pR.top)+'px';
+    ti.style.width=cR.width+'px';ti.style.height=cR.height+'px';
+    // Match font
+    var ff='"'+state.activeFont+'",-apple-system,sans-serif';
+    var displayScale=cR.width/(canvas.width||1);
+    var displayFontSize=state.fontSize*SCALE*displayScale;
+    ti.style.fontFamily=ff;ti.style.fontSize=displayFontSize+'px';
+    ti.style.lineHeight=(state.lineHeight/100);
+    ti.style.textAlign=state.align==='justify'?'justify':state.align;
+    ti.style.fontWeight=state.bold?'bold':'normal';
+    ti.style.fontStyle=state.italic?'italic':'normal';
+    ti.style.letterSpacing=(state.letterSpacing*SCALE*displayScale)+'px';
+  }
+
+  // Tap preview to focus textarea
+  document.getElementById('previewArea').addEventListener('click',function(e){
+    if(e.target.classList.contains('rz-handle')||e.target.classList.contains('rz-drag'))return;
+    textInput.focus();
+  });
 
   // === SAVE ===
   document.getElementById('saveBtn').addEventListener('click',function(){
@@ -626,6 +642,7 @@ function initApp(){
     canvas.style.transform='translate('+ox+'px,'+oy+'px)';
     resizeBox.style.display='block';resizeBox.style.left=(cR.left-pR.left)+'px';resizeBox.style.top=(cR.top-pR.top)+'px';
     resizeBox.style.width=cR.width+'px';resizeBox.style.height=cR.height+'px';
+    if(typeof syncTextarea==='function')syncTextarea();
   }
   // Resize handles
   (function(){
