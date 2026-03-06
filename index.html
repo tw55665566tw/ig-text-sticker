@@ -15,994 +15,435 @@
 @font-face { font-family: 'mantou'; src: url('fonts/MantouSans.woff2') format('woff2'); }
 @font-face { font-family: 'biantao'; src: url('fonts/ZiHunBianTaoTi.woff2') format('woff2'); }
 
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; padding: 16px; padding-bottom: 120px; }
-h1 { font-size: 20px; text-align: center; margin-bottom: 16px; }
-.section { background: #16213e; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
-.section-title { font-size: 13px; color: #8899aa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-label { display: block; font-size: 14px; color: #ccc; margin-bottom: 6px; }
-.font-upload-area { border: 2px dashed #334; border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
-.font-upload-area:active { border-color: #667; }
-.font-upload-area.has-font { border-color: #4ade80; background: rgba(74,222,128,0.05); }
-#fontFileInput { display: none; }
-.font-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.font-chip { background: #1a1a2e; border: 1px solid #334; border-radius: 8px; padding: 8px 12px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-.font-chip.active { border-color: #818cf8; background: rgba(129,140,248,0.15); color: #818cf8; }
-.font-chip.builtin { border-color: #334; }
-textarea { width: 100%; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #fff; font-size: 16px; padding: 10px; resize: vertical; min-height: 60px; }
-textarea:focus { outline: none; border-color: #818cf8; }
-.control-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.control-row label { margin: 0; flex-shrink: 0; width: 70px; font-size: 13px; }
-input[type="range"] { flex: 1; accent-color: #818cf8; height: 6px; }
-.range-value { width: 50px; text-align: right; font-size: 13px; color: #818cf8; font-variant-numeric: tabular-nums; }
-input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6px; cursor: pointer; background: none; }
-.color-presets { display: flex; gap: 6px; flex-wrap: wrap; }
-.color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
-.color-dot.active { border-color: #fff; }
-.toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.toggle { width: 44px; height: 24px; background: #334; border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
-.toggle.on { background: #818cf8; }
-.toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s; }
-.toggle.on::after { transform: translateX(20px); }
-#previewContainer { background: repeating-conic-gradient(#2a2a3e 0% 25%, #1e1e32 0% 50%) 0 0 / 20px 20px; border-radius: 12px; min-height: 200px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 20px; }
-#previewCanvas { max-width: 100%; }
-.export-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff; font-size: 17px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; margin-top: 12px; transition: transform 0.1s; }
-.export-btn:active { transform: scale(0.97); }
-.btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
-.btn-sm { padding: 6px 14px; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #ccc; font-size: 13px; cursor: pointer; }
-.btn-sm.active { border-color: #818cf8; color: #818cf8; background: rgba(129,140,248,0.1); }
-#savedImage { max-width: 100%; border-radius: 8px; margin-top: 12px; }
-.save-hint { text-align: center; font-size: 13px; color: #8899aa; margin-top: 8px; }
-.font-section-label { font-size: 11px; color: #556; margin: 8px 0 4px; text-transform: uppercase; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* Top: Preview */
+#previewArea{flex-shrink:0;background:repeating-conic-gradient(#2a2a3e 0% 25%,#1e1e32 0% 50%) 0 0/20px 20px;display:flex;align-items:center;justify-content:center;min-height:180px;max-height:40vh;padding:12px;position:relative}
+#previewCanvas{max-width:100%;max-height:100%}
+#saveBtn{position:absolute;right:12px;bottom:12px;padding:10px 20px;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+#saveBtn:active{transform:scale(.95)}
+
+/* Tab bar */
+#tabBar{flex-shrink:0;display:flex;background:#0f1529;border-top:1px solid #1e2a4a;border-bottom:1px solid #1e2a4a;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#tabBar::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:10px 16px;font-size:13px;color:#667;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:#818cf8;border-bottom-color:#818cf8}
+
+/* Tab content */
+#tabContent{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Controls */
+.ctrl{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ctrl-label{flex-shrink:0;width:60px;font-size:12px;color:#8899aa}
+input[type="range"]{flex:1;accent-color:#818cf8;height:5px}
+.ctrl-val{width:42px;text-align:right;font-size:12px;color:#818cf8;font-variant-numeric:tabular-nums}
+input[type="color"]{width:36px;height:30px;border:none;border-radius:6px;cursor:pointer;background:none}
+textarea{width:100%;background:#1a1a2e;border:1px solid #334;border-radius:8px;color:#fff;font-size:15px;padding:10px;resize:none;height:70px}
+textarea:focus{outline:none;border-color:#818cf8}
+
+/* Chips & buttons */
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.chip{padding:6px 10px;background:#1a1a2e;border:1px solid #334;border-radius:8px;font-size:12px;color:#ccc;cursor:pointer}
+.chip.active{border-color:#818cf8;color:#818cf8;background:rgba(129,140,248,.1)}
+.btn-row{display:flex;gap:5px;flex-wrap:wrap}
+.btn-s{padding:5px 12px;background:#1a1a2e;border:1px solid #334;border-radius:6px;color:#ccc;font-size:12px;cursor:pointer}
+.btn-s.active{border-color:#818cf8;color:#818cf8;background:rgba(129,140,248,.1)}
+.color-row{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.cdot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.cdot.active{border-color:#fff}
+
+/* Toggle */
+.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.tog{width:40px;height:22px;background:#334;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0}
+.tog.on{background:#818cf8}
+.tog::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s}
+.tog.on::after{transform:translateX(18px)}
+
+.sub-label{font-size:11px;color:#556;margin:6px 0 4px;text-transform:uppercase}
+
+/* Font upload */
+.font-up{border:1px dashed #334;border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:12px;color:#667;margin-bottom:8px}
+.font-up.has{border-color:#4ade80;color:#4ade80}
+#fontFileInput{display:none}
 </style>
 </head>
 <body>
 
 <!-- Password Gate -->
-<div id="lockScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a2e;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
-  <div style="font-size:40px;">🔒</div>
-  <div style="font-size:16px;color:#8899aa;">請輸入密碼</div>
-  <input type="password" id="pwdInput" placeholder="密碼" style="width:200px;padding:12px;border-radius:8px;border:1px solid #334;background:#16213e;color:#fff;font-size:16px;text-align:center;">
-  <button id="pwdBtn" style="padding:12px 40px;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;">進入</button>
-  <div id="pwdError" style="color:#f87171;font-size:13px;display:none;">密碼錯誤</div>
-</div>
-<div id="mainContent" style="display:none;">
-
-<h1>IG 文字貼紙產生器</h1>
-
-<!-- Font Selection -->
-<div class="section">
-  <div class="section-title">字體選擇</div>
-  <div class="font-section-label">內建字體</div>
-  <div class="font-grid" id="builtinFontList"></div>
-  <div class="font-section-label" style="margin-top:12px;">上傳自訂字體</div>
-  <div class="font-upload-area" id="fontUploadArea">
-    <span style="font-size:20px;">+</span> <span style="font-size:13px; color:#8899aa;">TTF / OTF / WOFF2</span>
-  </div>
-  <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" multiple>
-  <div class="font-grid" id="customFontList"></div>
+<div id="lockScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a2e;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <div style="font-size:40px">🔒</div>
+  <div style="font-size:16px;color:#8899aa">請輸入密碼</div>
+  <input type="password" id="pwdInput" placeholder="密碼" style="width:200px;padding:12px;border-radius:8px;border:1px solid #334;background:#16213e;color:#fff;font-size:16px;text-align:center">
+  <button id="pwdBtn" style="padding:12px 40px;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">進入</button>
+  <div id="pwdError" style="color:#f87171;font-size:13px;display:none">密碼錯誤</div>
 </div>
 
-<!-- Text Input -->
-<div class="section">
-  <div class="section-title">文字內容</div>
-  <textarea id="textInput" placeholder="輸入你要的文字...">水電維修找我們</textarea>
+<div id="mainContent" style="display:none;height:100vh;display:none;flex-direction:column">
+
+<!-- Preview Area (Top) -->
+<div id="previewArea">
+  <canvas id="previewCanvas"></canvas>
+  <button id="saveBtn">儲存</button>
 </div>
 
-<!-- Style Controls -->
-<div class="section">
-  <div class="section-title">樣式設定</div>
-  <div class="control-row">
-    <label>大小</label>
-    <input type="range" id="fontSize" min="12" max="200" value="64">
-    <span class="range-value" id="fontSizeVal">64px</span>
-  </div>
-  <div class="control-row">
-    <label>行距</label>
-    <input type="range" id="lineHeight" min="80" max="250" value="130">
-    <span class="range-value" id="lineHeightVal">130%</span>
-  </div>
-  <div class="control-row">
-    <label>字距</label>
-    <input type="range" id="letterSpacing" min="-10" max="30" value="0">
-    <span class="range-value" id="letterSpacingVal">0px</span>
-  </div>
-  <div class="control-row">
-    <label>文字色</label>
-    <input type="color" id="textColor" value="#ffffff">
-    <div class="color-presets" id="textColorPresets"></div>
-  </div>
-  <div class="control-row">
-    <label>透明度</label>
-    <input type="range" id="textOpacity" min="0" max="100" value="100">
-    <span class="range-value" id="textOpacityVal">100%</span>
-  </div>
-  <div class="control-row">
-    <label>排列</label>
-    <div class="btn-row">
-      <button class="btn-sm active" id="horizBtn">橫排</button>
-      <button class="btn-sm" id="vertBtn">直排</button>
-    </div>
-  </div>
-  <div class="control-row">
-    <label>旋轉</label>
-    <input type="range" id="rotation" min="-180" max="180" value="0">
-    <span class="range-value" id="rotationVal">0°</span>
-  </div>
-  <div class="control-row">
-    <label>對齊</label>
-    <div class="btn-row">
-      <button class="btn-sm active" data-align="center">中</button>
-      <button class="btn-sm" data-align="left">左</button>
-      <button class="btn-sm" data-align="right">右</button>
-    </div>
-  </div>
-  <div class="control-row">
-    <label>樣式</label>
-    <div class="btn-row">
-      <button class="btn-sm" id="boldBtn"><b>粗體</b></button>
-      <button class="btn-sm" id="italicBtn"><i>斜體</i></button>
-      <button class="btn-sm" id="underlineBtn"><u>底線</u></button>
-      <button class="btn-sm" id="strikeBtn"><s>刪除線</s></button>
-    </div>
-  </div>
-  <div class="control-row">
-    <label>翻轉</label>
-    <div class="btn-row">
-      <button class="btn-sm" id="flipHBtn">水平翻轉</button>
-      <button class="btn-sm" id="flipVBtn">垂直翻轉</button>
-    </div>
-  </div>
+<!-- Tab Bar -->
+<div id="tabBar">
+  <div class="tab active" data-tab="text">文字</div>
+  <div class="tab" data-tab="font">字體</div>
+  <div class="tab" data-tab="style">樣式</div>
+  <div class="tab" data-tab="stroke">描邊</div>
+  <div class="tab" data-tab="shadow">陰影</div>
+  <div class="tab" data-tab="charbg">逐字背景</div>
+  <div class="tab" data-tab="bg">背景框</div>
+  <div class="tab" data-tab="curve">弧形</div>
 </div>
 
-<!-- Curved Text -->
-<div class="section">
-  <div class="section-title">弧形文字</div>
-  <div class="toggle-row">
-    <label>啟用弧形</label>
-    <div class="toggle" id="curveToggle"></div>
-  </div>
-  <div id="curveControls" style="display:none;">
-    <div class="control-row">
-      <label>弧度</label>
-      <input type="range" id="curveRadius" min="50" max="800" value="300">
-      <span class="range-value" id="curveRadiusVal">300</span>
-    </div>
-    <div class="control-row">
-      <label>方向</label>
-      <div class="btn-row">
-        <button class="btn-sm active" id="curveUpBtn">向上弧</button>
-        <button class="btn-sm" id="curveDownBtn">向下弧</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Tab Content -->
+<div id="tabContent">
 
-<!-- Stroke (Double Outline) -->
-<div class="section">
-  <div class="section-title">描邊（雙層）</div>
-  <div class="toggle-row">
-    <label>啟用描邊</label>
-    <div class="toggle" id="strokeToggle"></div>
+  <!-- TEXT -->
+  <div class="tab-panel active" data-panel="text">
+    <textarea id="textInput" placeholder="輸入你要的文字...">水電維修找我們</textarea>
   </div>
-  <div id="strokeControls" style="display:none;">
-    <div class="font-section-label">外描邊</div>
-    <div class="control-row">
-      <label>粗細</label>
-      <input type="range" id="strokeOutWidth" min="0" max="30" value="6">
-      <span class="range-value" id="strokeOutWidthVal">6px</span>
-    </div>
-    <div class="control-row">
-      <label>外描邊色</label>
-      <input type="color" id="strokeOutColor" value="#000000">
-      <div class="color-presets" id="strokeOutColorPresets"></div>
-    </div>
-    <div class="font-section-label">內描邊</div>
-    <div class="control-row">
-      <label>粗細</label>
-      <input type="range" id="strokeInWidth" min="0" max="20" value="0">
-      <span class="range-value" id="strokeInWidthVal">0px</span>
-    </div>
-    <div class="control-row">
-      <label>內描邊色</label>
-      <input type="color" id="strokeInColor" value="#ffffff">
-    </div>
-  </div>
-</div>
 
-<!-- Shadow -->
-<div class="section">
-  <div class="section-title">陰影</div>
-  <div class="toggle-row">
-    <label>啟用陰影</label>
-    <div class="toggle" id="shadowToggle"></div>
+  <!-- FONT -->
+  <div class="tab-panel" data-panel="font">
+    <div class="sub-label">內建字體</div>
+    <div class="chips" id="builtinFontList"></div>
+    <div class="sub-label">上傳自訂字體</div>
+    <div class="font-up" id="fontUploadArea">+ TTF / OTF / WOFF2</div>
+    <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" multiple>
+    <div class="chips" id="customFontList"></div>
   </div>
-  <div id="shadowControls" style="display:none;">
-    <div class="control-row">
-      <label>角度</label>
-      <input type="range" id="shadowAngle" min="0" max="360" value="45">
-      <span class="range-value" id="shadowAngleVal">45°</span>
-    </div>
-    <div class="control-row">
-      <label>距離</label>
-      <input type="range" id="shadowDist" min="0" max="30" value="4">
-      <span class="range-value" id="shadowDistVal">4px</span>
-    </div>
-    <div class="control-row">
-      <label>模糊</label>
-      <input type="range" id="shadowBlur" min="0" max="30" value="6">
-      <span class="range-value" id="shadowBlurVal">6px</span>
-    </div>
-    <div class="control-row">
-      <label>透明度</label>
-      <input type="range" id="shadowOpacity" min="0" max="100" value="80">
-      <span class="range-value" id="shadowOpacityVal">80%</span>
-    </div>
-    <div class="control-row">
-      <label>陰影色</label>
-      <input type="color" id="shadowColor" value="#000000">
-    </div>
-  </div>
-</div>
 
-<!-- Per-character Background -->
-<div class="section">
-  <div class="section-title">逐字背景</div>
-  <div class="toggle-row">
-    <label>啟用逐字背景</label>
-    <div class="toggle" id="charBgToggle"></div>
+  <!-- STYLE -->
+  <div class="tab-panel" data-panel="style">
+    <div class="ctrl"><span class="ctrl-label">大小</span><input type="range" id="fontSize" min="12" max="200" value="64"><span class="ctrl-val" id="fontSizeVal">64px</span></div>
+    <div class="ctrl"><span class="ctrl-label">行距</span><input type="range" id="lineHeight" min="80" max="250" value="130"><span class="ctrl-val" id="lineHeightVal">130%</span></div>
+    <div class="ctrl"><span class="ctrl-label">字距</span><input type="range" id="letterSpacing" min="-10" max="30" value="0"><span class="ctrl-val" id="letterSpacingVal">0px</span></div>
+    <div class="ctrl"><span class="ctrl-label">文字色</span><input type="color" id="textColor" value="#ffffff"><div class="color-row" id="textColorPresets"></div></div>
+    <div class="ctrl"><span class="ctrl-label">透明度</span><input type="range" id="textOpacity" min="0" max="100" value="100"><span class="ctrl-val" id="textOpacityVal">100%</span></div>
+    <div class="ctrl"><span class="ctrl-label">排列</span><div class="btn-row"><button class="btn-s active" id="horizBtn">橫排</button><button class="btn-s" id="vertBtn">直排</button></div></div>
+    <div class="ctrl"><span class="ctrl-label">旋轉</span><input type="range" id="rotation" min="-180" max="180" value="0"><span class="ctrl-val" id="rotationVal">0°</span></div>
+    <div class="ctrl"><span class="ctrl-label">對齊</span><div class="btn-row"><button class="btn-s active" data-align="center">中</button><button class="btn-s" data-align="left">左</button><button class="btn-s" data-align="right">右</button></div></div>
+    <div class="ctrl"><span class="ctrl-label">樣式</span><div class="btn-row"><button class="btn-s" id="boldBtn"><b>粗</b></button><button class="btn-s" id="italicBtn"><i>斜</i></button><button class="btn-s" id="underlineBtn"><u>底線</u></button><button class="btn-s" id="strikeBtn"><s>刪除</s></button></div></div>
+    <div class="ctrl"><span class="ctrl-label">翻轉</span><div class="btn-row"><button class="btn-s" id="flipHBtn">水平</button><button class="btn-s" id="flipVBtn">垂直</button></div></div>
   </div>
-  <div id="charBgControls" style="display:none;">
-    <div class="control-row">
-      <label>形狀</label>
-      <div class="btn-row">
-        <button class="btn-sm active" id="charBgCircleBtn">圓形</button>
-        <button class="btn-sm" id="charBgSquareBtn">方形</button>
-      </div>
-    </div>
-    <div class="control-row">
-      <label>大小</label>
-      <input type="range" id="charBgSize" min="80" max="200" value="130">
-      <span class="range-value" id="charBgSizeVal">130%</span>
-    </div>
-    <div class="control-row">
-      <label>背景色</label>
-      <input type="color" id="charBgColor" value="#FFD15B">
-      <div class="color-presets" id="charBgColorPresets"></div>
-    </div>
-    <div class="control-row">
-      <label>透明度</label>
-      <input type="range" id="charBgOpacity" min="0" max="100" value="100">
-      <span class="range-value" id="charBgOpacityVal">100%</span>
-    </div>
-  </div>
-</div>
 
-<!-- Background Box -->
-<div class="section">
-  <div class="section-title">背景框</div>
-  <div class="toggle-row">
-    <label>啟用背景框</label>
-    <div class="toggle" id="bgToggle"></div>
-  </div>
-  <div id="bgControls" style="display:none;">
-    <div class="control-row">
-      <label>背景色</label>
-      <input type="color" id="bgColor" value="#000000">
-    </div>
-    <div class="control-row">
-      <label>透明度</label>
-      <input type="range" id="bgOpacity" min="0" max="100" value="70">
-      <span class="range-value" id="bgOpacityVal">70%</span>
-    </div>
-    <div class="control-row">
-      <label>圓角</label>
-      <input type="range" id="bgRadius" min="0" max="40" value="12">
-      <span class="range-value" id="bgRadiusVal">12px</span>
-    </div>
-    <div class="control-row">
-      <label>內距</label>
-      <input type="range" id="bgPadding" min="0" max="60" value="20">
-      <span class="range-value" id="bgPaddingVal">20px</span>
+  <!-- STROKE -->
+  <div class="tab-panel" data-panel="stroke">
+    <div class="tog-row"><span style="font-size:13px">啟用描邊</span><div class="tog" id="strokeToggle"></div></div>
+    <div id="strokeControls" style="display:none">
+      <div class="sub-label">外描邊</div>
+      <div class="ctrl"><span class="ctrl-label">粗細</span><input type="range" id="strokeOutWidth" min="0" max="30" value="6"><span class="ctrl-val" id="strokeOutWidthVal">6px</span></div>
+      <div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="strokeOutColor" value="#000000"><div class="color-row" id="strokeOutColorPresets"></div></div>
+      <div class="sub-label">內描邊</div>
+      <div class="ctrl"><span class="ctrl-label">粗細</span><input type="range" id="strokeInWidth" min="0" max="20" value="0"><span class="ctrl-val" id="strokeInWidthVal">0px</span></div>
+      <div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="strokeInColor" value="#ffffff"></div>
     </div>
   </div>
-</div>
 
-<!-- Preview -->
-<div class="section">
-  <div class="section-title">預覽（棋盤格 = 透明區域）</div>
-  <div id="previewContainer">
-    <canvas id="previewCanvas"></canvas>
+  <!-- SHADOW -->
+  <div class="tab-panel" data-panel="shadow">
+    <div class="tog-row"><span style="font-size:13px">啟用陰影</span><div class="tog" id="shadowToggle"></div></div>
+    <div id="shadowControls" style="display:none">
+      <div class="ctrl"><span class="ctrl-label">角度</span><input type="range" id="shadowAngle" min="0" max="360" value="45"><span class="ctrl-val" id="shadowAngleVal">45°</span></div>
+      <div class="ctrl"><span class="ctrl-label">距離</span><input type="range" id="shadowDist" min="0" max="30" value="4"><span class="ctrl-val" id="shadowDistVal">4px</span></div>
+      <div class="ctrl"><span class="ctrl-label">模糊</span><input type="range" id="shadowBlur" min="0" max="30" value="6"><span class="ctrl-val" id="shadowBlurVal">6px</span></div>
+      <div class="ctrl"><span class="ctrl-label">透明度</span><input type="range" id="shadowOpacity" min="0" max="100" value="80"><span class="ctrl-val" id="shadowOpacityVal">80%</span></div>
+      <div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="shadowColor" value="#000000"></div>
+    </div>
   </div>
-  <button class="export-btn" id="exportBtn">儲存到相簿</button>
-</div>
 
-</div><!-- end mainContent -->
+  <!-- CHAR BG -->
+  <div class="tab-panel" data-panel="charbg">
+    <div class="tog-row"><span style="font-size:13px">啟用逐字背景</span><div class="tog" id="charBgToggle"></div></div>
+    <div id="charBgControls" style="display:none">
+      <div class="ctrl"><span class="ctrl-label">形狀</span><div class="btn-row"><button class="btn-s active" id="charBgCircleBtn">圓形</button><button class="btn-s" id="charBgSquareBtn">方形</button></div></div>
+      <div class="ctrl"><span class="ctrl-label">大小</span><input type="range" id="charBgSize" min="80" max="200" value="130"><span class="ctrl-val" id="charBgSizeVal">130%</span></div>
+      <div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="charBgColor" value="#FFD15B"><div class="color-row" id="charBgColorPresets"></div></div>
+      <div class="ctrl"><span class="ctrl-label">透明度</span><input type="range" id="charBgOpacity" min="0" max="100" value="100"><span class="ctrl-val" id="charBgOpacityVal">100%</span></div>
+    </div>
+  </div>
+
+  <!-- BG BOX -->
+  <div class="tab-panel" data-panel="bg">
+    <div class="tog-row"><span style="font-size:13px">啟用背景框</span><div class="tog" id="bgToggle"></div></div>
+    <div id="bgControls" style="display:none">
+      <div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="bgColor" value="#000000"></div>
+      <div class="ctrl"><span class="ctrl-label">透明度</span><input type="range" id="bgOpacity" min="0" max="100" value="70"><span class="ctrl-val" id="bgOpacityVal">70%</span></div>
+      <div class="ctrl"><span class="ctrl-label">圓角</span><input type="range" id="bgRadius" min="0" max="40" value="12"><span class="ctrl-val" id="bgRadiusVal">12px</span></div>
+      <div class="ctrl"><span class="ctrl-label">內距</span><input type="range" id="bgPadding" min="0" max="60" value="20"><span class="ctrl-val" id="bgPaddingVal">20px</span></div>
+    </div>
+  </div>
+
+  <!-- CURVE -->
+  <div class="tab-panel" data-panel="curve">
+    <div class="tog-row"><span style="font-size:13px">啟用弧形</span><div class="tog" id="curveToggle"></div></div>
+    <div id="curveControls" style="display:none">
+      <div class="ctrl"><span class="ctrl-label">弧度</span><input type="range" id="curveRadius" min="50" max="800" value="300"><span class="ctrl-val" id="curveRadiusVal">300</span></div>
+      <div class="ctrl"><span class="ctrl-label">方向</span><div class="btn-row"><button class="btn-s active" id="curveUpBtn">向上</button><button class="btn-s" id="curveDownBtn">向下</button></div></div>
+    </div>
+  </div>
+
+</div><!-- tabContent -->
+</div><!-- mainContent -->
 
 <script>
-(function() {
-  // Password check (SHA-256 hash, password not visible in source)
-  var PASS_HASH = 'e242af95d49d290521a2b0730473a1b7e053d4b244e0189876569943bef840d1';
-  async function sha256(str) {
-    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+(function(){
+  // === PASSWORD ===
+  var PASS_HASH='e242af95d49d290521a2b0730473a1b7e053d4b244e0189876569943bef840d1';
+  async function sha256(s){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
+  async function checkPwd(){
+    var h=await sha256(document.getElementById('pwdInput').value);
+    if(h===PASS_HASH){document.getElementById('lockScreen').style.display='none';var m=document.getElementById('mainContent');m.style.display='flex';initApp()}
+    else{document.getElementById('pwdError').style.display='block'}
   }
-  async function checkPwd() {
-    var input = document.getElementById('pwdInput').value;
-    var hash = await sha256(input);
-    if (hash === PASS_HASH) {
-      document.getElementById('lockScreen').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      try { sessionStorage.setItem('ig-sticker-auth', '1'); } catch(e) {}
-      initApp();
-    } else {
-      document.getElementById('pwdError').style.display = 'block';
-    }
-  }
-  document.getElementById('pwdBtn').addEventListener('click', checkPwd);
-  document.getElementById('pwdInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') checkPwd();
-  });
-  // Auto-login if already authenticated this session
-  try {
-    if (sessionStorage.getItem('ig-sticker-auth') === '1') {
-      document.getElementById('lockScreen').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      // defer initApp
-      setTimeout(function() { initApp(); }, 0);
-    }
-  } catch(e) {}
+  document.getElementById('pwdBtn').addEventListener('click',checkPwd);
+  document.getElementById('pwdInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPwd()});
+  try{if(sessionStorage.getItem('ig-sticker-auth')==='1'){document.getElementById('lockScreen').style.display='none';document.getElementById('mainContent').style.display='flex';setTimeout(initApp,0)}}catch(e){}
 
-  function initApp() {
-  // Built-in fonts
-  var BUILTIN_FONTS = [
-    { id: 'jinxuan', name: '金萱粗體' },
-    { id: 'jinxuanlatte', name: '金萱那堤' },
-    { id: 'lihsianti', name: '粒線體' },
-    { id: 'tsuhsianti', name: '粗線體' },
-    { id: 'burnfont', name: '激燃體' },
-    { id: 'creamfont', name: '凝書體' },
-    { id: 'twroadfont', name: '道路體' },
-    { id: 'mantou', name: '饅頭黑體' },
-    { id: 'biantao', name: '扁桃體' }
+  function initApp(){
+  try{sessionStorage.setItem('ig-sticker-auth','1')}catch(e){}
+
+  // === TAB SWITCHING ===
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+      document.querySelectorAll('.tab-panel').forEach(function(x){x.classList.remove('active')});
+      t.classList.add('active');
+      document.querySelector('[data-panel="'+t.dataset.tab+'"]').classList.add('active');
+    });
+  });
+
+  // === FONTS ===
+  var BUILTIN_FONTS=[
+    {id:'jinxuan',name:'金萱粗體'},{id:'jinxuanlatte',name:'金萱那堤'},{id:'lihsianti',name:'粒線體'},
+    {id:'tsuhsianti',name:'粗線體'},{id:'burnfont',name:'激燃體'},{id:'creamfont',name:'凝書體'},
+    {id:'twroadfont',name:'道路體'},{id:'mantou',name:'饅頭黑體'},{id:'biantao',name:'扁桃體'}
   ];
 
-  var state = {
-    fonts: [],
-    activeFont: 'jinxuan',
-    text: '水電維修找我們',
-    fontSize: 64,
-    lineHeight: 130,
-    letterSpacing: 0,
-    textColor: '#ffffff',
-    textOpacity: 100,
-    align: 'center',
-    vertical: false,
-    rotation: 0,
-    bold: false,
-    italic: false,
-    underline: false,
-    strike: false,
-    flipH: false,
-    flipV: false,
-    curve: false,
-    curveRadius: 300,
-    curveDown: false,
-    stroke: false,
-    strokeOutWidth: 6,
-    strokeOutColor: '#000000',
-    strokeInWidth: 0,
-    strokeInColor: '#ffffff',
-    shadow: false,
-    shadowAngle: 45,
-    shadowDist: 4,
-    shadowBlur: 6,
-    shadowOpacity: 80,
-    shadowColor: '#000000',
-    charBg: false,
-    charBgShape: 'circle',
-    charBgSize: 130,
-    charBgColor: '#FFD15B',
-    charBgOpacity: 100,
-    bg: false,
-    bgColor: '#000000',
-    bgOpacity: 70,
-    bgRadius: 12,
-    bgPadding: 20
+  var state={
+    fonts:[],activeFont:'jinxuan',text:'水電維修找我們',
+    fontSize:64,lineHeight:130,letterSpacing:0,textColor:'#ffffff',textOpacity:100,
+    align:'center',vertical:false,rotation:0,bold:false,italic:false,underline:false,strike:false,
+    flipH:false,flipV:false,
+    curve:false,curveRadius:300,curveDown:false,
+    stroke:false,strokeOutWidth:6,strokeOutColor:'#000000',strokeInWidth:0,strokeInColor:'#ffffff',
+    shadow:false,shadowAngle:45,shadowDist:4,shadowBlur:6,shadowOpacity:80,shadowColor:'#000000',
+    charBg:false,charBgShape:'circle',charBgSize:130,charBgColor:'#FFD15B',charBgOpacity:100,
+    bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20
   };
 
-  var SCALE = 4;
-  var colorPresets = ['#ffffff','#000000','#f87171','#fb923c','#facc15','#4ade80','#38bdf8','#818cf8','#e879f9','#ff6b6b','#EABA28','#437FFF'];
+  var SCALE=4;
+  var presets=['#ffffff','#000000','#f87171','#fb923c','#facc15','#4ade80','#38bdf8','#818cf8','#e879f9','#EABA28','#437FFF'];
+  function setText(id,t){var e=document.getElementById(id);if(e)e.textContent=t}
+  function mkPresets(cid,iid){var c=document.getElementById(cid);if(!c)return;presets.forEach(function(cl){var d=document.createElement('div');d.className='cdot';d.style.background=cl;d.addEventListener('click',function(){document.getElementById(iid).value=cl;document.getElementById(iid).dispatchEvent(new Event('input'))});c.appendChild(d)})}
+  mkPresets('textColorPresets','textColor');mkPresets('strokeOutColorPresets','strokeOutColor');mkPresets('charBgColorPresets','charBgColor');
 
-  function setText(id, text) { document.getElementById(id).textContent = text; }
-
-  function initColorPresets(containerId, inputId) {
-    var container = document.getElementById(containerId);
-    colorPresets.forEach(function(c) {
-      var dot = document.createElement('div');
-      dot.className = 'color-dot';
-      dot.style.background = c;
-      dot.addEventListener('click', function() {
-        document.getElementById(inputId).value = c;
-        document.getElementById(inputId).dispatchEvent(new Event('input'));
-      });
-      container.appendChild(dot);
-    });
-  }
-  initColorPresets('textColorPresets', 'textColor');
-  initColorPresets('strokeOutColorPresets', 'strokeOutColor');
-  initColorPresets('charBgColorPresets', 'charBgColor');
-
-  // Render built-in font list
-  var builtinList = document.getElementById('builtinFontList');
-  BUILTIN_FONTS.forEach(function(f) {
-    var chip = document.createElement('div');
-    chip.className = 'font-chip builtin' + (f.id === state.activeFont ? ' active' : '');
-    chip.textContent = f.name;
-    chip.style.fontFamily = f.id + ', sans-serif';
-    chip.dataset.fontId = f.id;
-    chip.addEventListener('click', function() {
-      state.activeFont = f.id;
-      updateFontChips();
-      render();
-    });
-    builtinList.appendChild(chip);
+  // Built-in font chips
+  var bfl=document.getElementById('builtinFontList');
+  BUILTIN_FONTS.forEach(function(f){
+    var c=document.createElement('div');c.className='chip'+(f.id===state.activeFont?' active':'');
+    c.textContent=f.name;c.style.fontFamily='"'+f.id+'",sans-serif';c.dataset.fontId=f.id;
+    c.addEventListener('click',function(){state.activeFont=f.id;updChips();render()});
+    bfl.appendChild(c);
   });
-
-  function updateFontChips() {
-    document.querySelectorAll('.font-chip').forEach(function(c) {
-      var fid = c.dataset.fontId;
-      c.classList.toggle('active', fid === state.activeFont);
-    });
-  }
+  function updChips(){document.querySelectorAll('.chip[data-font-id],.chip[data-font-id]').forEach(function(c){c.classList.toggle('active',c.dataset.fontId===state.activeFont)})}
 
   // Font upload
-  document.getElementById('fontUploadArea').addEventListener('click', function() {
-    document.getElementById('fontFileInput').click();
+  document.getElementById('fontUploadArea').addEventListener('click',function(){document.getElementById('fontFileInput').click()});
+  document.getElementById('fontFileInput').addEventListener('change',function(e){
+    if(!e.target.files||!e.target.files.length)return;
+    Array.from(e.target.files).forEach(function(file){
+      var fn=file.name.replace(/\.(ttf|otf|woff2?)$/i,'');
+      var r=new FileReader();
+      r.onload=function(ev){
+        try{var font=new FontFace(fn,ev.target.result);font.load().then(function(lf){
+          document.fonts.add(lf);if(state.fonts.indexOf(fn)===-1)state.fonts.push(fn);
+          state.activeFont=fn;mkCustomChips();updChips();render();
+        }).catch(function(err){alert('載入失敗: '+err.message)})}catch(err){alert('格式錯誤: '+err.message)}
+      };r.readAsArrayBuffer(file);
+    });e.target.value='';
   });
-
-  document.getElementById('fontFileInput').addEventListener('change', function(e) {
-    var files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    Array.from(files).forEach(function(file) {
-      var fontName = file.name.replace(/\.(ttf|otf|woff2?)$/i, '');
-      var reader = new FileReader();
-      reader.onload = function(evt) {
-        try {
-          var font = new FontFace(fontName, evt.target.result);
-          font.load().then(function(loaded) {
-            document.fonts.add(loaded);
-            if (state.fonts.indexOf(fontName) === -1) {
-              state.fonts.push(fontName);
-            }
-            state.activeFont = fontName;
-            renderCustomFontList();
-            updateFontChips();
-            render();
-          }).catch(function(err) {
-            alert('字體載入失敗: ' + err.message);
-          });
-        } catch(err) {
-          alert('字體格式錯誤: ' + err.message);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    });
-    e.target.value = '';
-  });
-
-  function renderCustomFontList() {
-    var list = document.getElementById('customFontList');
-    while (list.firstChild) list.removeChild(list.firstChild);
-    state.fonts.forEach(function(name) {
-      var chip = document.createElement('div');
-      chip.className = 'font-chip' + (name === state.activeFont ? ' active' : '');
-      chip.textContent = name;
-      chip.style.fontFamily = '"' + name + '", sans-serif';
-      chip.dataset.fontId = name;
-      chip.addEventListener('click', function() {
-        state.activeFont = name;
-        updateFontChips();
-        render();
-      });
-      list.appendChild(chip);
+  function mkCustomChips(){
+    var cl=document.getElementById('customFontList');while(cl.firstChild)cl.removeChild(cl.firstChild);
+    state.fonts.forEach(function(n){
+      var c=document.createElement('div');c.className='chip'+(n===state.activeFont?' active':'');
+      c.textContent=n;c.style.fontFamily='"'+n+'",sans-serif';c.dataset.fontId=n;
+      c.addEventListener('click',function(){state.activeFont=n;updChips();render()});
+      cl.appendChild(c);
     });
   }
 
-  // Toggle helpers
-  function bindToggle(toggleId, controlsId, stateKey) {
-    document.getElementById(toggleId).addEventListener('click', function() {
-      state[stateKey] = !state[stateKey];
-      this.classList.toggle('on', state[stateKey]);
-      if (controlsId) document.getElementById(controlsId).style.display = state[stateKey] ? 'block' : 'none';
-      render();
-    });
-  }
-  bindToggle('strokeToggle', 'strokeControls', 'stroke');
-  bindToggle('shadowToggle', 'shadowControls', 'shadow');
-  bindToggle('bgToggle', 'bgControls', 'bg');
-  bindToggle('curveToggle', 'curveControls', 'curve');
-  bindToggle('charBgToggle', 'charBgControls', 'charBg');
-
-  // Char bg shape
-  document.getElementById('charBgCircleBtn').addEventListener('click', function() {
-    state.charBgShape = 'circle';
-    document.getElementById('charBgCircleBtn').classList.add('active');
-    document.getElementById('charBgSquareBtn').classList.remove('active');
-    render();
-  });
-  document.getElementById('charBgSquareBtn').addEventListener('click', function() {
-    state.charBgShape = 'square';
-    document.getElementById('charBgSquareBtn').classList.add('active');
-    document.getElementById('charBgCircleBtn').classList.remove('active');
-    render();
-  });
+  // Toggles
+  function bindTog(tid,cid,sk){document.getElementById(tid).addEventListener('click',function(){state[sk]=!state[sk];this.classList.toggle('on',state[sk]);if(cid)document.getElementById(cid).style.display=state[sk]?'block':'none';render()})}
+  bindTog('strokeToggle','strokeControls','stroke');bindTog('shadowToggle','shadowControls','shadow');
+  bindTog('bgToggle','bgControls','bg');bindTog('curveToggle','curveControls','curve');
+  bindTog('charBgToggle','charBgControls','charBg');
 
   // Style buttons
-  function bindStyleBtn(id, key) {
-    document.getElementById(id).addEventListener('click', function() {
-      state[key] = !state[key];
-      this.classList.toggle('active', state[key]);
-      render();
-    });
-  }
-  bindStyleBtn('boldBtn', 'bold');
-  bindStyleBtn('italicBtn', 'italic');
-  bindStyleBtn('underlineBtn', 'underline');
-  bindStyleBtn('strikeBtn', 'strike');
-  bindStyleBtn('flipHBtn', 'flipH');
-  bindStyleBtn('flipVBtn', 'flipV');
+  function bindSty(id,k){document.getElementById(id).addEventListener('click',function(){state[k]=!state[k];this.classList.toggle('active',state[k]);render()})}
+  bindSty('boldBtn','bold');bindSty('italicBtn','italic');bindSty('underlineBtn','underline');
+  bindSty('strikeBtn','strike');bindSty('flipHBtn','flipH');bindSty('flipVBtn','flipV');
 
-  // Layout buttons
-  document.getElementById('horizBtn').addEventListener('click', function() {
-    state.vertical = false;
-    document.getElementById('horizBtn').classList.add('active');
-    document.getElementById('vertBtn').classList.remove('active');
-    render();
-  });
-  document.getElementById('vertBtn').addEventListener('click', function() {
-    state.vertical = true;
-    document.getElementById('vertBtn').classList.add('active');
-    document.getElementById('horizBtn').classList.remove('active');
-    render();
-  });
+  // Layout
+  document.getElementById('horizBtn').addEventListener('click',function(){state.vertical=false;document.getElementById('horizBtn').classList.add('active');document.getElementById('vertBtn').classList.remove('active');render()});
+  document.getElementById('vertBtn').addEventListener('click',function(){state.vertical=true;document.getElementById('vertBtn').classList.add('active');document.getElementById('horizBtn').classList.remove('active');render()});
 
   // Curve direction
-  document.getElementById('curveUpBtn').addEventListener('click', function() {
-    state.curveDown = false;
-    document.getElementById('curveUpBtn').classList.add('active');
-    document.getElementById('curveDownBtn').classList.remove('active');
-    render();
-  });
-  document.getElementById('curveDownBtn').addEventListener('click', function() {
-    state.curveDown = true;
-    document.getElementById('curveDownBtn').classList.add('active');
-    document.getElementById('curveUpBtn').classList.remove('active');
-    render();
-  });
+  document.getElementById('curveUpBtn').addEventListener('click',function(){state.curveDown=false;this.classList.add('active');document.getElementById('curveDownBtn').classList.remove('active');render()});
+  document.getElementById('curveDownBtn').addEventListener('click',function(){state.curveDown=true;this.classList.add('active');document.getElementById('curveUpBtn').classList.remove('active');render()});
+
+  // Char bg shape
+  document.getElementById('charBgCircleBtn').addEventListener('click',function(){state.charBgShape='circle';this.classList.add('active');document.getElementById('charBgSquareBtn').classList.remove('active');render()});
+  document.getElementById('charBgSquareBtn').addEventListener('click',function(){state.charBgShape='square';this.classList.add('active');document.getElementById('charBgCircleBtn').classList.remove('active');render()});
 
   // Alignment
-  document.querySelectorAll('[data-align]').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      state.align = this.dataset.align;
-      document.querySelectorAll('[data-align]').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.align === state.align);
-      });
-      render();
-    });
-  });
+  document.querySelectorAll('[data-align]').forEach(function(b){b.addEventListener('click',function(){state.align=this.dataset.align;document.querySelectorAll('[data-align]').forEach(function(x){x.classList.toggle('active',x.dataset.align===state.align)});render()})});
 
   // Range inputs
-  [
-    ['fontSize','fontSize','px'],['lineHeight','lineHeight','%'],['letterSpacing','letterSpacing','px'],
-    ['textOpacity','textOpacity','%'],['rotation','rotation','\u00b0'],['curveRadius','curveRadius',''],
-    ['strokeOutWidth','strokeOutWidth','px'],['strokeInWidth','strokeInWidth','px'],
-    ['shadowAngle','shadowAngle','\u00b0'],['shadowDist','shadowDist','px'],['shadowBlur','shadowBlur','px'],['shadowOpacity','shadowOpacity','%'],
-    ['charBgSize','charBgSize','%'],['charBgOpacity','charBgOpacity','%'],
-    ['bgOpacity','bgOpacity','%'],['bgRadius','bgRadius','px'],['bgPadding','bgPadding','px']
-  ].forEach(function(cfg) {
-    var el = document.getElementById(cfg[0]);
-    if (!el) return;
-    el.addEventListener('input', function() {
-      state[cfg[1]] = parseInt(el.value);
-      setText(cfg[0] + 'Val', el.value + cfg[2]);
-      render();
-    });
-  });
+  [['fontSize','fontSize','px'],['lineHeight','lineHeight','%'],['letterSpacing','letterSpacing','px'],
+   ['textOpacity','textOpacity','%'],['rotation','rotation','\u00b0'],['curveRadius','curveRadius',''],
+   ['strokeOutWidth','strokeOutWidth','px'],['strokeInWidth','strokeInWidth','px'],
+   ['shadowAngle','shadowAngle','\u00b0'],['shadowDist','shadowDist','px'],['shadowBlur','shadowBlur','px'],['shadowOpacity','shadowOpacity','%'],
+   ['charBgSize','charBgSize','%'],['charBgOpacity','charBgOpacity','%'],
+   ['bgOpacity','bgOpacity','%'],['bgRadius','bgRadius','px'],['bgPadding','bgPadding','px']
+  ].forEach(function(c){var e=document.getElementById(c[0]);if(!e)return;e.addEventListener('input',function(){state[c[1]]=parseInt(e.value);setText(c[0]+'Val',e.value+c[2]);render()})});
 
   // Color inputs
-  ['textColor','strokeOutColor','strokeInColor','shadowColor','charBgColor','bgColor'].forEach(function(id) {
-    document.getElementById(id).addEventListener('input', function(e) {
-      state[id] = e.target.value;
-      render();
-    });
+  ['textColor','strokeOutColor','strokeInColor','shadowColor','charBgColor','bgColor'].forEach(function(id){
+    var e=document.getElementById(id);if(!e)return;e.addEventListener('input',function(ev){state[id]=ev.target.value;render()});
   });
 
   // Text input
-  document.getElementById('textInput').addEventListener('input', function(e) {
-    state.text = e.target.value;
-    render();
+  document.getElementById('textInput').addEventListener('input',function(e){state.text=e.target.value;render()});
+
+  // === SAVE ===
+  document.getElementById('saveBtn').addEventListener('click',function(){
+    var canvas=document.getElementById('previewCanvas');
+    canvas.toBlob(function(blob){
+      if(navigator.share&&navigator.canShare){
+        var file=new File([blob],'ig-sticker.png',{type:'image/png'});
+        if(navigator.canShare({files:[file]})){navigator.share({files:[file]}).catch(function(){});return}
+      }
+      var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='ig-sticker-'+Date.now()+'.png';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url)},1000);
+    },'image/png');
   });
 
   // === RENDER ===
-  function render() {
-    var canvas = document.getElementById('previewCanvas');
-    var ctx = canvas.getContext('2d');
-    var text = state.text || ' ';
-    var lines = text.split('\n');
-    if (lines.length === 0) lines = [' '];
+  function render(){
+    var canvas=document.getElementById('previewCanvas'),ctx=canvas.getContext('2d');
+    var text=state.text||' ',lines=text.split('\n');if(!lines.length)lines=[' '];
+    var fs=(state.italic?'italic ':'')+(state.bold?'bold ':'');
+    var ff='"'+state.activeFont+'",-apple-system,sans-serif';
+    var fz=state.fontSize*SCALE,lH=fz*(state.lineHeight/100),ls=state.letterSpacing*SCALE;
+    ctx.font=fs+fz+'px '+ff;
 
-    var fontStyle = (state.italic ? 'italic ' : '') + (state.bold ? 'bold ' : '');
-    var fontFamily = '"' + state.activeFont + '", -apple-system, sans-serif';
-    var fontSize = state.fontSize * SCALE;
-    var lineH = fontSize * (state.lineHeight / 100);
-    var letterSp = state.letterSpacing * SCALE;
-
-    // Curved text mode
-    if (state.curve && !state.vertical) {
-      renderCurved(canvas, ctx, lines, fontStyle, fontFamily, fontSize, letterSp);
-      return;
+    var cW,cH;
+    if(state.curve&&!state.vertical){renderCurved(canvas,ctx,lines,fs,ff,fz,ls);return}
+    if(state.vertical){
+      var mc=0;lines.forEach(function(l){if(l.length>mc)mc=l.length});
+      var cs=fz*(state.lineHeight/100);cW=cs*lines.length;cH=fz*mc+ls*Math.max(0,mc-1);
+    }else{
+      var mW=0,lw=[];lines.forEach(function(l){var w=ctx.measureText(l).width;if(ls&&l.length>1)w+=ls*(l.length-1);lw.push(w);if(w>mW)mW=w});
+      cW=mW;cH=lH*lines.length;
     }
-
-    ctx.font = fontStyle + fontSize + 'px ' + fontFamily;
-
-    var contentW, contentH;
-    if (state.vertical) {
-      var maxChars = 0;
-      lines.forEach(function(l) { if (l.length > maxChars) maxChars = l.length; });
-      var colSp = fontSize * (state.lineHeight / 100);
-      contentW = colSp * lines.length;
-      contentH = fontSize * maxChars + letterSp * Math.max(0, maxChars - 1);
-    } else {
-      var maxW = 0;
-      var lw = [];
-      lines.forEach(function(l) {
-        var w = ctx.measureText(l).width;
-        if (letterSp && l.length > 1) w += letterSp * (l.length - 1);
-        lw.push(w);
-        if (w > maxW) maxW = w;
-      });
-      contentW = maxW;
-      contentH = lineH * lines.length;
+    var pad=state.bg?state.bgPadding*SCALE:0;
+    var sE=state.stroke?Math.max(state.strokeOutWidth,state.strokeInWidth)*SCALE:0;
+    var aR=state.shadowAngle*Math.PI/180,sDx=Math.cos(aR)*state.shadowDist,sDy=Math.sin(aR)*state.shadowDist;
+    var hE=state.shadow?(Math.max(Math.abs(sDx),Math.abs(sDy))+state.shadowBlur)*SCALE:0;
+    var cbE=state.charBg?(state.charBgSize/100-1)*state.fontSize*SCALE/2+5*SCALE:0;
+    sE=Math.max(sE,cbE);var ex=sE+hE+5*SCALE;
+    var iW=cW+pad*2+ex*2,iH=cH+pad*2+ex*2;
+    var ang=state.rotation*Math.PI/180,cA=Math.abs(Math.cos(ang)),sA=Math.abs(Math.sin(ang));
+    var cw=Math.ceil(iW*cA+iH*sA)+4*SCALE,ch=Math.ceil(iW*sA+iH*cA)+4*SCALE;
+    canvas.width=cw;canvas.height=ch;
+    var dw=Math.min(cw/SCALE,340);canvas.style.width=dw+'px';canvas.style.height=(ch/SCALE)*(dw/(cw/SCALE))+'px';
+    ctx.clearRect(0,0,cw,ch);
+    ctx.save();ctx.translate(cw/2,ch/2);ctx.rotate(ang);
+    if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
+    ctx.translate(-iW/2,-iH/2);
+    var ox=ex,oy=ex;
+    if(state.bg)drawBg(ctx,ox-pad,oy-pad,cW+pad*2,cH+pad*2);
+    ctx.font=fs+fz+'px '+ff;ctx.textBaseline='top';ctx.globalAlpha=state.textOpacity/100;
+    if(state.vertical){
+      var cs2=fz*(state.lineHeight/100);
+      lines.forEach(function(l,ci){var x=ox+cW-cs2*(ci+1)+(cs2-fz)/2;for(var i=0;i<l.length;i++){var cw2=ctx.measureText(l[i]).width;drawChar(ctx,l[i],x+(fz-cw2)/2,oy+i*(fz+ls),fz)}});
+    }else{
+      var lw2=[],mW2=0;lines.forEach(function(l){var w=ctx.measureText(l).width;if(ls&&l.length>1)w+=ls*(l.length-1);lw2.push(w);if(w>mW2)mW2=w});
+      lines.forEach(function(l,i){var x=ox;if(state.align==='center')x=ox+(cW-lw2[i])/2;else if(state.align==='right')x=ox+cW-lw2[i];var y=oy+i*lH;
+        if(ls&&l.length>1){var cx=x;for(var j=0;j<l.length;j++){drawChar(ctx,l[j],cx,y,fz);cx+=ctx.measureText(l[j]).width+ls}}else{drawChar(ctx,l,x,y,fz)}});
     }
-
-    var pad = state.bg ? state.bgPadding * SCALE : 0;
-    var sEx = state.stroke ? Math.max(state.strokeOutWidth, state.strokeInWidth) * SCALE : 0;
-    var shAngleRad = state.shadowAngle * Math.PI / 180;
-    var shDx = Math.cos(shAngleRad) * state.shadowDist;
-    var shDy = Math.sin(shAngleRad) * state.shadowDist;
-    var shEx = state.shadow ? (Math.max(Math.abs(shDx), Math.abs(shDy)) + state.shadowBlur) * SCALE : 0;
-    var charBgEx = state.charBg ? (state.charBgSize / 100 - 1) * state.fontSize * SCALE / 2 + 5 * SCALE : 0;
-    sEx = Math.max(sEx, charBgEx);
-    var extra = sEx + shEx + 5 * SCALE;
-    var innerW = contentW + pad * 2 + extra * 2;
-    var innerH = contentH + pad * 2 + extra * 2;
-
-    var angle = state.rotation * Math.PI / 180;
-    var cosA = Math.abs(Math.cos(angle));
-    var sinA = Math.abs(Math.sin(angle));
-    var cw = Math.ceil(innerW * cosA + innerH * sinA) + 4 * SCALE;
-    var ch = Math.ceil(innerW * sinA + innerH * cosA) + 4 * SCALE;
-
-    canvas.width = cw; canvas.height = ch;
-    var dw = Math.min(cw / SCALE, 360);
-    canvas.style.width = dw + 'px';
-    canvas.style.height = (ch / SCALE) * (dw / (cw / SCALE)) + 'px';
-    ctx.clearRect(0, 0, cw, ch);
-
-    ctx.save();
-    ctx.translate(cw / 2, ch / 2);
-    ctx.rotate(angle);
-    if (state.flipH) ctx.scale(-1, 1);
-    if (state.flipV) ctx.scale(1, -1);
-    ctx.translate(-innerW / 2, -innerH / 2);
-
-    var ox = extra, oy = extra;
-
-    // Background
-    if (state.bg) drawBg(ctx, ox - pad, oy - pad, contentW + pad * 2, contentH + pad * 2);
-
-    ctx.font = fontStyle + fontSize + 'px ' + fontFamily;
-    ctx.textBaseline = 'top';
-    ctx.globalAlpha = state.textOpacity / 100;
-
-    if (state.vertical) {
-      var colSp2 = fontSize * (state.lineHeight / 100);
-      lines.forEach(function(line, ci) {
-        var x = ox + contentW - colSp2 * (ci + 1) + (colSp2 - fontSize) / 2;
-        for (var i = 0; i < line.length; i++) {
-          var cw2 = ctx.measureText(line[i]).width;
-          drawChar(ctx, line[i], x + (fontSize - cw2) / 2, oy + i * (fontSize + letterSp), fontSize);
-        }
-      });
-    } else {
-      // Recalculate lw
-      var lw2 = []; var mw2 = 0;
-      lines.forEach(function(l) {
-        var w = ctx.measureText(l).width;
-        if (letterSp && l.length > 1) w += letterSp * (l.length - 1);
-        lw2.push(w); if (w > mw2) mw2 = w;
-      });
-      lines.forEach(function(line, i) {
-        var x = ox;
-        if (state.align === 'center') x = ox + (contentW - lw2[i]) / 2;
-        else if (state.align === 'right') x = ox + contentW - lw2[i];
-        var y = oy + i * lineH;
-        if (letterSp && line.length > 1) {
-          var cx2 = x;
-          for (var j = 0; j < line.length; j++) {
-            drawChar(ctx, line[j], cx2, y, fontSize);
-            cx2 += ctx.measureText(line[j]).width + letterSp;
-          }
-        } else {
-          drawChar(ctx, line, x, y, fontSize);
-        }
-      });
-    }
-    ctx.globalAlpha = 1;
-    ctx.restore();
+    ctx.globalAlpha=1;ctx.restore();
   }
 
-  // Curved text rendering
-  function renderCurved(canvas, ctx, lines, fontStyle, fontFamily, fontSize, letterSp) {
-    var line = lines.join(' ');
-    var radius = state.curveRadius * SCALE;
-
-    ctx.font = fontStyle + fontSize + 'px ' + fontFamily;
-
-    // Measure each char
-    var chars = [];
-    var totalW = 0;
-    for (var i = 0; i < line.length; i++) {
-      var w = ctx.measureText(line[i]).width;
-      chars.push({ ch: line[i], w: w });
-      totalW += w + (i < line.length - 1 ? letterSp : 0);
-    }
-
-    var totalAngle = totalW / radius;
-    var sEx = state.stroke ? Math.max(state.strokeOutWidth, state.strokeInWidth) * SCALE : 0;
-    var shAngleRad2 = state.shadowAngle * Math.PI / 180;
-    var shDx2 = Math.cos(shAngleRad2) * state.shadowDist;
-    var shDy2 = Math.sin(shAngleRad2) * state.shadowDist;
-    var shEx = state.shadow ? (Math.max(Math.abs(shDx2), Math.abs(shDy2)) + state.shadowBlur) * SCALE : 0;
-    var charBgEx2 = state.charBg ? (state.charBgSize / 100 - 1) * fontSize / 2 : 0;
-    var margin = Math.max(sEx, charBgEx2) + shEx + fontSize + 10 * SCALE;
-
-    var size = (radius + margin) * 2;
-    var cw = Math.ceil(size) + 4 * SCALE;
-    var ch = Math.ceil(size) + 4 * SCALE;
-
-    // Apply rotation to canvas size
-    var angle = state.rotation * Math.PI / 180;
-    var cosA = Math.abs(Math.cos(angle));
-    var sinA = Math.abs(Math.sin(angle));
-    var finalW = Math.ceil(cw * cosA + ch * sinA);
-    var finalH = Math.ceil(cw * sinA + ch * cosA);
-
-    canvas.width = finalW; canvas.height = finalH;
-    var dw = Math.min(finalW / SCALE, 360);
-    canvas.style.width = dw + 'px';
-    canvas.style.height = (finalH / SCALE) * (dw / (finalW / SCALE)) + 'px';
-    ctx.clearRect(0, 0, finalW, finalH);
-
-    ctx.save();
-    ctx.translate(finalW / 2, finalH / 2);
-    ctx.rotate(angle);
-    if (state.flipH) ctx.scale(-1, 1);
-    if (state.flipV) ctx.scale(1, -1);
-
-    // Background (circular segment)
-    if (state.bg) {
-      var pad = state.bgPadding * SCALE;
-      var bgR = state.bgRadius * SCALE;
-      var arcOuter = radius + fontSize / 2 + pad;
-      var arcInner = radius - fontSize / 2 - pad;
-      var bgAngle = totalAngle + (pad * 2) / radius;
-      var startA = -Math.PI / 2 - bgAngle / 2;
-      var endA = -Math.PI / 2 + bgAngle / 2;
-      var cy = state.curveDown ? -radius : radius;
-
-      var alphaHex = Math.round(state.bgOpacity * 2.55).toString(16).padStart(2, '0');
-      ctx.fillStyle = state.bgColor + alphaHex;
-      ctx.beginPath();
-      if (state.curveDown) {
-        ctx.arc(0, cy, arcOuter, Math.PI - endA, Math.PI - startA);
-        ctx.arc(0, cy, arcInner, Math.PI - startA, Math.PI - endA, true);
-      } else {
-        ctx.arc(0, -cy, arcOuter, startA, endA);
-        ctx.arc(0, -cy, arcInner, endA, startA, true);
-      }
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    ctx.font = fontStyle + fontSize + 'px ' + fontFamily;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-    ctx.globalAlpha = state.textOpacity / 100;
-
-    var startAngle = -totalAngle / 2;
-    var currentAngle = startAngle;
-
-    for (var j = 0; j < chars.length; j++) {
-      var charAngle = chars[j].w / radius;
-      var midAngle = currentAngle + charAngle / 2;
-
-      ctx.save();
-      if (state.curveDown) {
-        var drawAngle = Math.PI / 2 - midAngle;
-        ctx.rotate(drawAngle);
-        ctx.translate(0, radius);
-        ctx.rotate(Math.PI);
-      } else {
-        var drawAngle2 = -Math.PI / 2 + midAngle;
-        ctx.rotate(drawAngle2);
-        ctx.translate(0, -radius);
-      }
-
-      drawCharCurved(ctx, chars[j].ch, 0, 0, fontSize);
-      ctx.restore();
-
-      currentAngle += charAngle + letterSp / radius;
-    }
-
-    ctx.globalAlpha = 1;
-    ctx.restore();
+  function renderCurved(canvas,ctx,lines,fs,ff,fz,ls){
+    var line=lines.join(' '),radius=state.curveRadius*SCALE;ctx.font=fs+fz+'px '+ff;
+    var chars=[],tW=0;for(var i=0;i<line.length;i++){var w=ctx.measureText(line[i]).width;chars.push({ch:line[i],w:w});tW+=w+(i<line.length-1?ls:0)}
+    var tA=tW/radius;
+    var sE=state.stroke?Math.max(state.strokeOutWidth,state.strokeInWidth)*SCALE:0;
+    var aR2=state.shadowAngle*Math.PI/180;var hE=state.shadow?(Math.max(Math.abs(Math.cos(aR2)*state.shadowDist),Math.abs(Math.sin(aR2)*state.shadowDist))+state.shadowBlur)*SCALE:0;
+    var cbE2=state.charBg?(state.charBgSize/100-1)*fz/2:0;
+    var margin=Math.max(sE,cbE2)+hE+fz+10*SCALE;
+    var sz=(radius+margin)*2,cw=Math.ceil(sz)+4*SCALE,ch=cw;
+    var ang=state.rotation*Math.PI/180,cA=Math.abs(Math.cos(ang)),sA=Math.abs(Math.sin(ang));
+    var fW=Math.ceil(cw*cA+ch*sA),fH=Math.ceil(cw*sA+ch*cA);
+    canvas.width=fW;canvas.height=fH;var dw=Math.min(fW/SCALE,340);canvas.style.width=dw+'px';canvas.style.height=(fH/SCALE)*(dw/(fW/SCALE))+'px';
+    ctx.clearRect(0,0,fW,fH);ctx.save();ctx.translate(fW/2,fH/2);ctx.rotate(ang);
+    if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
+    if(state.bg){var pad=state.bgPadding*SCALE,aO=radius+fz/2+pad,aI=radius-fz/2-pad,bA=tA+(pad*2)/radius,s1=-Math.PI/2-bA/2,e1=-Math.PI/2+bA/2,cy=state.curveDown?-radius:radius;
+      var aH=Math.round(state.bgOpacity*2.55).toString(16).padStart(2,'0');ctx.fillStyle=state.bgColor+aH;ctx.beginPath();
+      if(state.curveDown){ctx.arc(0,cy,aO,Math.PI-e1,Math.PI-s1);ctx.arc(0,cy,aI,Math.PI-s1,Math.PI-e1,true)}else{ctx.arc(0,-cy,aO,s1,e1);ctx.arc(0,-cy,aI,e1,s1,true)}ctx.closePath();ctx.fill()}
+    ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.textAlign='center';ctx.globalAlpha=state.textOpacity/100;
+    var sa=-tA/2,ca=sa;
+    for(var j=0;j<chars.length;j++){var chA=chars[j].w/radius,ma=ca+chA/2;ctx.save();
+      if(state.curveDown){ctx.rotate(Math.PI/2-ma);ctx.translate(0,radius);ctx.rotate(Math.PI)}else{ctx.rotate(-Math.PI/2+ma);ctx.translate(0,-radius)}
+      drawCharC(ctx,chars[j].ch,0,0,fz);ctx.restore();ca+=chA+ls/radius}
+    ctx.globalAlpha=1;ctx.restore();
   }
 
-  function drawBg(ctx, x, y, w, h) {
-    var r = state.bgRadius * SCALE;
-    var alphaHex = Math.round(state.bgOpacity * 2.55).toString(16).padStart(2, '0');
-    ctx.fillStyle = state.bgColor + alphaHex;
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(x, y, w, h, r);
-    } else {
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-    }
-    ctx.fill();
+  function drawBg(ctx,x,y,w,h){var r=state.bgRadius*SCALE,a=Math.round(state.bgOpacity*2.55).toString(16).padStart(2,'0');ctx.fillStyle=state.bgColor+a;ctx.beginPath();
+    if(ctx.roundRect){ctx.roundRect(x,y,w,h,r)}else{ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}ctx.fill()}
+
+  function drawCBg(ctx,x,y,fz,cw){if(!state.charBg)return;var sz=fz*(state.charBgSize/100),a=Math.round(state.charBgOpacity*2.55).toString(16).padStart(2,'0');
+    ctx.fillStyle=state.charBgColor+a;var cx=x+cw/2,cy=y+fz/2;
+    if(state.charBgShape==='circle'){ctx.beginPath();ctx.arc(cx,cy,sz/2,0,Math.PI*2);ctx.fill()}else{ctx.fillRect(cx-sz/2,cy-sz/2,sz,sz)}}
+
+  function apSh(ctx){if(state.shadow){var a=state.shadowAngle*Math.PI/180,h=Math.round(state.shadowOpacity*2.55).toString(16).padStart(2,'0');
+    ctx.shadowColor=state.shadowColor+h;ctx.shadowBlur=state.shadowBlur*SCALE;ctx.shadowOffsetX=Math.cos(a)*state.shadowDist*SCALE;ctx.shadowOffsetY=Math.sin(a)*state.shadowDist*SCALE}}
+  function clSh(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0}
+
+  function drawChar(ctx,ch,x,y,fz){
+    var cw=ctx.measureText(ch).width;drawCBg(ctx,x,y,fz,cw);apSh(ctx);
+    if(state.stroke&&state.strokeOutWidth>0){ctx.strokeStyle=state.strokeOutColor;ctx.lineWidth=(state.strokeOutWidth*2+state.strokeInWidth*2)*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
+    if(state.stroke&&state.strokeInWidth>0){ctx.strokeStyle=state.strokeInColor;ctx.lineWidth=state.strokeInWidth*2*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
+    clSh(ctx);ctx.fillStyle=state.textColor;ctx.fillText(ch,x,y);
+    if(state.underline)ctx.fillRect(x,y+fz*.9,cw,Math.max(2,fz*.05));
+    if(state.strike)ctx.fillRect(x,y+fz*.45,cw,Math.max(2,fz*.05));
   }
 
-  function drawCharBg(ctx, x, y, fontSize, charW) {
-    if (!state.charBg) return;
-    var size = fontSize * (state.charBgSize / 100);
-    var alphaHex = Math.round(state.charBgOpacity * 2.55).toString(16).padStart(2, '0');
-    ctx.fillStyle = state.charBgColor + alphaHex;
-    var cx = x + charW / 2;
-    var cy = y + fontSize / 2;
-    if (state.charBgShape === 'circle') {
-      ctx.beginPath();
-      ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.fillRect(cx - size / 2, cy - size / 2, size, size);
-    }
+  function drawCharC(ctx,ch,x,y,fz){
+    var cw=ctx.measureText(ch).width;if(state.charBg){var sz=fz*(state.charBgSize/100),a=Math.round(state.charBgOpacity*2.55).toString(16).padStart(2,'0');
+      ctx.fillStyle=state.charBgColor+a;if(state.charBgShape==='circle'){ctx.beginPath();ctx.arc(x,y,sz/2,0,Math.PI*2);ctx.fill()}else{ctx.fillRect(x-sz/2,y-sz/2,sz,sz)}}
+    apSh(ctx);
+    if(state.stroke&&state.strokeOutWidth>0){ctx.strokeStyle=state.strokeOutColor;ctx.lineWidth=(state.strokeOutWidth*2+state.strokeInWidth*2)*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
+    if(state.stroke&&state.strokeInWidth>0){ctx.strokeStyle=state.strokeInColor;ctx.lineWidth=state.strokeInWidth*2*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
+    clSh(ctx);ctx.fillStyle=state.textColor;ctx.fillText(ch,x,y);
   }
 
-  function drawChar(ctx, char, x, y, fontSize) {
-    var charW = ctx.measureText(char).width;
-    drawCharBg(ctx, x, y, fontSize, charW);
-    applyShadow(ctx);
-    // Outer stroke (drawn first, thicker)
-    if (state.stroke && state.strokeOutWidth > 0) {
-      ctx.strokeStyle = state.strokeOutColor;
-      ctx.lineWidth = (state.strokeOutWidth * 2 + state.strokeInWidth * 2) * SCALE;
-      ctx.lineJoin = 'round'; ctx.miterLimit = 2;
-      ctx.strokeText(char, x, y);
-    }
-    // Inner stroke
-    if (state.stroke && state.strokeInWidth > 0) {
-      ctx.strokeStyle = state.strokeInColor;
-      ctx.lineWidth = state.strokeInWidth * 2 * SCALE;
-      ctx.lineJoin = 'round'; ctx.miterLimit = 2;
-      ctx.strokeText(char, x, y);
-    }
-    clearShadow(ctx);
-    ctx.fillStyle = state.textColor;
-    ctx.fillText(char, x, y);
-    // Decorations
-    if (state.underline) {
-      ctx.fillRect(x, y + fontSize * 0.9, charW, Math.max(2, fontSize * 0.05));
-    }
-    if (state.strike) {
-      ctx.fillRect(x, y + fontSize * 0.45, charW, Math.max(2, fontSize * 0.05));
-    }
-  }
-
-  function drawCharCurved(ctx, char, x, y, fontSize) {
-    var charW = ctx.measureText(char).width;
-    drawCharBg(ctx, x - charW / 2, y - fontSize / 2, fontSize, charW);
-    applyShadow(ctx);
-    if (state.stroke && state.strokeOutWidth > 0) {
-      ctx.strokeStyle = state.strokeOutColor;
-      ctx.lineWidth = (state.strokeOutWidth * 2 + state.strokeInWidth * 2) * SCALE;
-      ctx.lineJoin = 'round'; ctx.miterLimit = 2;
-      ctx.strokeText(char, x, y);
-    }
-    if (state.stroke && state.strokeInWidth > 0) {
-      ctx.strokeStyle = state.strokeInColor;
-      ctx.lineWidth = state.strokeInWidth * 2 * SCALE;
-      ctx.lineJoin = 'round'; ctx.miterLimit = 2;
-      ctx.strokeText(char, x, y);
-    }
-    clearShadow(ctx);
-    ctx.fillStyle = state.textColor;
-    ctx.fillText(char, x, y);
-  }
-
-  function applyShadow(ctx) {
-    if (state.shadow) {
-      var angleRad = state.shadowAngle * Math.PI / 180;
-      var alphaHex = Math.round(state.shadowOpacity * 2.55).toString(16).padStart(2, '0');
-      ctx.shadowColor = state.shadowColor + alphaHex;
-      ctx.shadowBlur = state.shadowBlur * SCALE;
-      ctx.shadowOffsetX = Math.cos(angleRad) * state.shadowDist * SCALE;
-      ctx.shadowOffsetY = Math.sin(angleRad) * state.shadowDist * SCALE;
-    }
-  }
-  function clearShadow(ctx) {
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-  }
-
-  // Export - one tap save
-  document.getElementById('exportBtn').addEventListener('click', function() {
-    var canvas = document.getElementById('previewCanvas');
-    canvas.toBlob(function(blob) {
-      // iOS Safari: use share sheet → save to Photos directly
-      if (navigator.share && navigator.canShare) {
-        var file = new File([blob], 'ig-sticker.png', { type: 'image/png' });
-        if (navigator.canShare({ files: [file] })) {
-          navigator.share({ files: [file] }).catch(function(){});
-          return;
-        }
-      }
-      // Desktop / Android fallback: auto download
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'ig-sticker-' + Date.now() + '.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-    }, 'image/png');
-  });
-
-  // Preload built-in fonts then render
-  var preloadText = document.createElement('div');
-  preloadText.style.cssText = 'position:absolute;left:-9999px;font-size:12px;';
-  BUILTIN_FONTS.forEach(function(f) {
-    var span = document.createElement('span');
-    span.style.fontFamily = '"' + f.id + '"';
-    span.textContent = '測試字體預載';
-    preloadText.appendChild(span);
-  });
-  document.body.appendChild(preloadText);
-
-  // Wait for fonts to load, then render + update chips
-  function onFontsReady() {
-    // Update font chip previews with actual font
-    document.querySelectorAll('#builtinFontList .font-chip').forEach(function(chip) {
-      chip.style.fontFamily = '"' + chip.dataset.fontId + '", sans-serif';
-    });
-    render();
-  }
-
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(onFontsReady);
-  }
-  // Fallback renders in case fonts load slowly
-  setTimeout(onFontsReady, 1000);
-  setTimeout(onFontsReady, 3000);
-  setTimeout(onFontsReady, 6000);
-  } // end initApp
+  // Preload fonts
+  var pl=document.createElement('div');pl.style.cssText='position:absolute;left:-9999px;font-size:12px';
+  BUILTIN_FONTS.forEach(function(f){var s=document.createElement('span');s.style.fontFamily='"'+f.id+'"';s.textContent='測';pl.appendChild(s)});
+  document.body.appendChild(pl);
+  function onReady(){document.querySelectorAll('#builtinFontList .chip').forEach(function(c){c.style.fontFamily='"'+c.dataset.fontId+'",sans-serif'});render()}
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(onReady);
+  setTimeout(onReady,1000);setTimeout(onReady,3000);setTimeout(onReady,6000);
+  }// end initApp
 })();
 </script>
 </body>
