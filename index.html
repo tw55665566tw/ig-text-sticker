@@ -19,10 +19,17 @@
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
 /* Top: Preview */
-#previewArea{flex-shrink:0;background:repeating-conic-gradient(#2a2a3e 0% 25%,#1e1e32 0% 50%) 0 0/20px 20px;display:flex;align-items:center;justify-content:center;min-height:180px;max-height:40vh;padding:12px;position:relative}
+#previewArea{flex-shrink:0;background:#2a2a2a;display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;max-height:50vh;padding:12px;position:relative}
 #previewCanvas{max-width:100%;max-height:100%}
-#saveBtn{position:absolute;right:12px;bottom:12px;padding:10px 20px;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+#saveBtn{position:absolute;right:12px;bottom:12px;padding:10px 20px;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;z-index:5}
 #saveBtn:active{transform:scale(.95)}
+/* Resize box */
+#resizeBox{position:absolute;border:1.5px dashed rgba(129,140,248,.7);pointer-events:none;display:none}
+.rz-handle{position:absolute;width:18px;height:18px;background:#818cf8;border:2px solid #fff;border-radius:3px;pointer-events:auto;touch-action:none;z-index:2}
+.rz-handle.tl{top:-9px;left:-9px;cursor:nwse-resize}
+.rz-handle.tr{top:-9px;right:-9px;cursor:nesw-resize}
+.rz-handle.bl{bottom:-9px;left:-9px;cursor:nesw-resize}
+.rz-handle.br{bottom:-9px;right:-9px;cursor:nwse-resize}
 
 /* Tab bar */
 #tabBar{flex-shrink:0;display:flex;background:#0f1529;border-top:1px solid #1e2a4a;border-bottom:1px solid #1e2a4a;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -86,13 +93,22 @@ textarea:focus{outline:none;border-color:#818cf8}
 <!-- Preview Area (Top) -->
 <div id="previewArea">
   <canvas id="previewCanvas"></canvas>
+  <div id="resizeBox">
+    <div class="rz-handle tl" data-dir="tl"></div>
+    <div class="rz-handle tr" data-dir="tr"></div>
+    <div class="rz-handle bl" data-dir="bl"></div>
+    <div class="rz-handle br" data-dir="br"></div>
+  </div>
   <button id="saveBtn">儲存</button>
+</div>
+<!-- Text Input (always visible below preview) -->
+<div style="flex-shrink:0;padding:6px 12px;background:#0d1117">
+  <textarea id="textInput" placeholder="輸入文字，Enter 換行...">水電維修找我們</textarea>
 </div>
 
 <!-- Tab Bar -->
 <div id="tabBar">
-  <div class="tab active" data-tab="text">文字</div>
-  <div class="tab" data-tab="font">字體</div>
+  <div class="tab active" data-tab="font">字體</div>
   <div class="tab" data-tab="style">樣式</div>
   <div class="tab" data-tab="stroke">描邊</div>
   <div class="tab" data-tab="shadow">陰影</div>
@@ -104,13 +120,8 @@ textarea:focus{outline:none;border-color:#818cf8}
 <!-- Tab Content -->
 <div id="tabContent">
 
-  <!-- TEXT -->
-  <div class="tab-panel active" data-panel="text">
-    <textarea id="textInput" placeholder="輸入你要的文字...">水電維修找我們</textarea>
-  </div>
-
   <!-- FONT -->
-  <div class="tab-panel" data-panel="font">
+  <div class="tab-panel active" data-panel="font">
     <div class="sub-label">內建字體</div>
     <div class="chips" id="builtinFontList"></div>
     <div class="sub-label">上傳自訂字體</div>
@@ -380,6 +391,7 @@ textarea:focus{outline:none;border-color:#818cf8}
         if(ls&&l.length>1){var cx=x;for(var j=0;j<l.length;j++){drawChar(ctx,l[j],cx,y,fz);cx+=ctx.measureText(l[j]).width+ls}}else{drawChar(ctx,l,x,y,fz)}});
     }
     ctx.globalAlpha=1;ctx.restore();
+    requestAnimationFrame(positionResizeBox);
   }
 
   function renderCurved(canvas,ctx,lines,fs,ff,fz,ls){
@@ -405,6 +417,7 @@ textarea:focus{outline:none;border-color:#818cf8}
       if(state.curveDown){ctx.rotate(Math.PI/2-ma);ctx.translate(0,radius);ctx.rotate(Math.PI)}else{ctx.rotate(-Math.PI/2+ma);ctx.translate(0,-radius)}
       drawCharC(ctx,chars[j].ch,0,0,fz);ctx.restore();ca+=chA+ls/radius}
     ctx.globalAlpha=1;ctx.restore();
+    requestAnimationFrame(positionResizeBox);
   }
 
   function drawBg(ctx,x,y,w,h){var r=state.bgRadius*SCALE,a=Math.round(state.bgOpacity*2.55).toString(16).padStart(2,'0');ctx.fillStyle=state.bgColor+a;ctx.beginPath();
@@ -435,6 +448,42 @@ textarea:focus{outline:none;border-color:#818cf8}
     if(state.stroke&&state.strokeInWidth>0){ctx.strokeStyle=state.strokeInColor;ctx.lineWidth=state.strokeInWidth*2*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
     clSh(ctx);ctx.fillStyle=state.textColor;ctx.fillText(ch,x,y);
   }
+
+  // === RESIZE BOX ===
+  var resizeBox=document.getElementById('resizeBox');
+  function positionResizeBox(){
+    var canvas=document.getElementById('previewCanvas');
+    var cRect=canvas.getBoundingClientRect();
+    var pRect=document.getElementById('previewArea').getBoundingClientRect();
+    // show box matching canvas position
+    resizeBox.style.display='block';
+    resizeBox.style.left=(cRect.left-pRect.left)+'px';
+    resizeBox.style.top=(cRect.top-pRect.top)+'px';
+    resizeBox.style.width=cRect.width+'px';
+    resizeBox.style.height=cRect.height+'px';
+  }
+
+  // Drag to resize = change fontSize
+  (function(){
+    var startY=0,startSize=0,dragging=false;
+    function onStart(e){
+      e.preventDefault();dragging=true;
+      var t=e.touches?e.touches[0]:e;startY=t.clientY;startSize=state.fontSize;
+    }
+    function onMove(e){
+      if(!dragging)return;e.preventDefault();
+      var t=e.touches?e.touches[0]:e;
+      var dy=startY-t.clientY;
+      var nv=Math.max(12,Math.min(200,startSize+Math.round(dy/2)));
+      state.fontSize=nv;document.getElementById('fontSize').value=nv;setText('fontSizeVal',nv+'px');render();
+    }
+    function onEnd(){dragging=false}
+    document.querySelectorAll('.rz-handle').forEach(function(h){
+      h.addEventListener('mousedown',onStart);h.addEventListener('touchstart',onStart,{passive:false});
+    });
+    document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onEnd);document.addEventListener('touchend',onEnd);
+  })();
 
   // Preload fonts
   var pl=document.createElement('div');pl.style.cssText='position:absolute;left:-9999px;font-size:12px';
