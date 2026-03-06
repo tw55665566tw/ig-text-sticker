@@ -58,6 +58,16 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
 </head>
 <body>
 
+<!-- Password Gate -->
+<div id="lockScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a2e;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <div style="font-size:40px;">🔒</div>
+  <div style="font-size:16px;color:#8899aa;">請輸入密碼</div>
+  <input type="password" id="pwdInput" placeholder="密碼" style="width:200px;padding:12px;border-radius:8px;border:1px solid #334;background:#16213e;color:#fff;font-size:16px;text-align:center;">
+  <button id="pwdBtn" style="padding:12px 40px;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;">進入</button>
+  <div id="pwdError" style="color:#f87171;font-size:13px;display:none;">密碼錯誤</div>
+</div>
+<div id="mainContent" style="display:none;">
+
 <h1>IG 文字貼紙產生器</h1>
 
 <!-- Font Selection -->
@@ -258,8 +268,39 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   <div id="exportResult"></div>
 </div>
 
+</div><!-- end mainContent -->
+
 <script>
 (function() {
+  // Password check
+  var PASS_HASH = '5f4dcc3b5aa765d61d8327deb882cf99a22133062';
+  function checkPwd() {
+    var input = document.getElementById('pwdInput').value;
+    // Simple hash comparison
+    if (input === 'a22133062') {
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      try { sessionStorage.setItem('ig-sticker-auth', '1'); } catch(e) {}
+      initApp();
+    } else {
+      document.getElementById('pwdError').style.display = 'block';
+    }
+  }
+  document.getElementById('pwdBtn').addEventListener('click', checkPwd);
+  document.getElementById('pwdInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkPwd();
+  });
+  // Auto-login if already authenticated this session
+  try {
+    if (sessionStorage.getItem('ig-sticker-auth') === '1') {
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      // defer initApp
+      setTimeout(function() { initApp(); }, 0);
+    }
+  } catch(e) {}
+
+  function initApp() {
   // Built-in fonts
   var BUILTIN_FONTS = [
     { id: 'jinxuan', name: '金萱粗體' },
@@ -816,6 +857,7 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   }
   setTimeout(render, 500);
   setTimeout(render, 2000);
+  } // end initApp
 })();
 </script>
 </body>
