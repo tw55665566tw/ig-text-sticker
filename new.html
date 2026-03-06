@@ -263,7 +263,10 @@ function initApp(){
   function addRecentColor(c){c=c.toLowerCase();recentColors=recentColors.filter(function(x){return x!==c});recentColors.unshift(c);if(recentColors.length>12)recentColors.pop();try{localStorage.setItem('ig-stk-rc',JSON.stringify(recentColors))}catch(e){}}
 
   var SCALE=4;
-  var presets=['#ffffff','#000000','#FF0000','#FF6600','#FFDD00','#00E639','#00BBFF','#6644FF','#FF00CC','#FF3399','#00FFCC','#FFAA00','#1B2A4A','#2D3A5C','#0F1F3D','#3B1F5E','#1A3C3C','#4A2040'];
+  var presets=[
+    '#ffffff','#000000','#FF0000','#FF6600','#FFDD00','#00E639','#00BBFF','#6644FF','#FF00CC','#FF3399','#00FFCC','#FFAA00',
+    '#C2B8A3','#A89F91','#D4C5B2','#B8A9C4','#A3B5C4','#C4A3A3','#8B9EAB','#C9B8D4','#D1C6B8','#A3C4B8','#D4B8C4','#B8C4A3'
+  ];
   function setText(id,t){var e=document.getElementById(id);if(e)e.textContent=t}
 
   // === TOOL BAR & PANELS ===
