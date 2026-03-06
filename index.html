@@ -25,83 +25,85 @@
 @font-face { font-family: 'qiji-classic'; src: url('fonts/qiji-classic.woff2') format('woff2'); }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+html{height:100%;overflow:hidden;position:fixed;width:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;color:#fff;height:100%;display:flex;flex-direction:column;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 
 /* Header bar */
-#headerBar{flex-shrink:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#0d1117;border-bottom:1px solid #1e2a4a}
+#headerBar{flex-shrink:0;height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:#0d1117;border-bottom:1px solid #1e2a4a}
 #headerBar .hb-left,#headerBar .hb-right{display:flex;gap:8px;align-items:center}
-.hb-btn{padding:6px 12px;background:#1a1a2e;border:1px solid #334;border-radius:6px;color:#8899aa;font-size:12px;cursor:pointer;white-space:nowrap}
+.hb-btn{padding:8px 14px;background:#1a1a2e;border:1px solid #334;border-radius:6px;color:#8899aa;font-size:14px;cursor:pointer;white-space:nowrap}
 .hb-btn:active{opacity:.7}
 .hb-btn.danger{color:#f87171;border-color:#534}
 .hb-btn.save{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;font-weight:600}
 
 /* Preview */
 #previewArea{flex:1;min-height:0;background:#2a2a2a;display:flex;align-items:center;justify-content:center;padding:12px;position:relative;overflow:hidden}
-#previewCanvas{max-width:100%;max-height:100%}
-#resizeBox{position:absolute;border:1.5px dashed rgba(129,140,248,.7);pointer-events:none;display:none}
-.rz-handle{position:absolute;width:16px;height:16px;background:#818cf8;border:2px solid #fff;border-radius:3px;pointer-events:auto;touch-action:none;z-index:2}
-.rz-handle.tl{top:-8px;left:-8px;cursor:nwse-resize}.rz-handle.tr{top:-8px;right:-8px;cursor:nesw-resize}
-.rz-handle.bl{bottom:-8px;left:-8px;cursor:nesw-resize}.rz-handle.br{bottom:-8px;right:-8px;cursor:nwse-resize}
-.rz-handle.tc{top:-8px;left:50%;margin-left:-8px;cursor:ns-resize}.rz-handle.bc{bottom:-8px;left:50%;margin-left:-8px;cursor:ns-resize}
-.rz-handle.ml{top:50%;margin-top:-8px;left:-8px;cursor:ew-resize}.rz-handle.mr{top:50%;margin-top:-8px;right:-8px;cursor:ew-resize}
+#previewCanvas{max-width:100%;max-height:100%;position:relative}
+#resizeBox{position:absolute;border:1.5px dashed rgba(129,140,248,.7);pointer-events:none;display:none;cursor:move}
+#resizeBox .rz-drag{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:auto;touch-action:none;cursor:move;z-index:1}
+.rz-handle{position:absolute;width:22px;height:22px;background:#818cf8;border:2px solid #fff;border-radius:4px;pointer-events:auto;touch-action:none;z-index:2}
+.rz-handle.tl{top:-11px;left:-11px;cursor:nwse-resize}.rz-handle.tr{top:-11px;right:-11px;cursor:nesw-resize}
+.rz-handle.bl{bottom:-11px;left:-11px;cursor:nesw-resize}.rz-handle.br{bottom:-11px;right:-11px;cursor:nwse-resize}
+.rz-handle.tc{top:-11px;left:50%;margin-left:-11px;cursor:ns-resize}.rz-handle.bc{bottom:-11px;left:50%;margin-left:-11px;cursor:ns-resize}
+.rz-handle.ml{top:50%;margin-top:-11px;left:-11px;cursor:ew-resize}.rz-handle.mr{top:50%;margin-top:-11px;right:-11px;cursor:ew-resize}
 #textInput{position:absolute;background:transparent;border:none;color:transparent;caret-color:#818cf8;font-size:18px;resize:none;z-index:3;padding:8px;outline:none;text-align:center;overflow:hidden;pointer-events:auto;width:80%;height:60%;top:20%;left:10%}
 
 /* Tool bar (ViviSticker keyboard-tool style) */
 #toolBar{flex-shrink:0;display:flex;background:#0f1529;border-top:1px solid #1e2a4a;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 4px}
 #toolBar::-webkit-scrollbar{display:none}
-.tool-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;cursor:pointer;min-width:52px}
-.tool-item .t-icon{font-size:18px;line-height:1}
-.tool-item .t-label{font-size:9px;color:#667;white-space:nowrap}
+.tool-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;cursor:pointer;min-width:58px}
+.tool-item .t-icon{font-size:22px;line-height:1}
+.tool-item .t-label{font-size:11px;color:#667;white-space:nowrap}
 .tool-item.active .t-icon,.tool-item.active .t-label{color:#818cf8}
 
 /* Panel */
-#panelArea{flex-shrink:0;max-height:35vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px;background:#111827;border-top:1px solid #1e2a4a;display:none}
+#panelArea{flex-shrink:0;max-height:35vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;background:#111827;border-top:1px solid #1e2a4a;display:none}
 
 /* Controls */
-.ctrl{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.ctrl-label{flex-shrink:0;width:56px;font-size:11px;color:#8899aa}
-input[type="range"]{flex:1;accent-color:#818cf8;height:4px}
-.ctrl-val{width:40px;text-align:right;font-size:11px;color:#818cf8;font-variant-numeric:tabular-nums}
-input[type="color"]{width:32px;height:28px;border:none;border-radius:6px;cursor:pointer;background:none}
+.ctrl{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ctrl-label{flex-shrink:0;width:56px;font-size:13px;color:#8899aa}
+input[type="range"]{flex:1;accent-color:#818cf8;height:8px}
+.ctrl-val{width:44px;text-align:right;font-size:13px;color:#818cf8;font-variant-numeric:tabular-nums}
+input[type="color"]{width:38px;height:34px;border:none;border-radius:6px;cursor:pointer;background:none}
 
 /* Chips */
 .chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
-.chip{padding:5px 9px;background:#1a1a2e;border:1px solid #334;border-radius:8px;font-size:11px;color:#ccc;cursor:pointer}
+.chip{padding:8px 14px;background:#1a1a2e;border:1px solid #334;border-radius:8px;font-size:13px;color:#ccc;cursor:pointer}
 .chip.active{border-color:#818cf8;color:#818cf8;background:rgba(129,140,248,.1)}
 .btn-row{display:flex;gap:4px;flex-wrap:wrap}
-.btn-s{padding:4px 10px;background:#1a1a2e;border:1px solid #334;border-radius:6px;color:#ccc;font-size:11px;cursor:pointer}
+.btn-s{padding:8px 14px;background:#1a1a2e;border:1px solid #334;border-radius:6px;color:#ccc;font-size:14px;cursor:pointer}
 .btn-s.active{border-color:#818cf8;color:#818cf8;background:rgba(129,140,248,.1)}
 
 /* Color */
 .color-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
-.cdot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0}
+.cdot{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0}
 .cdot.active{border-color:#fff}
 
 /* Toggle */
-.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.tog{width:38px;height:20px;background:#334;border-radius:10px;position:relative;cursor:pointer;flex-shrink:0}
+.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;min-height:36px}
+.tog{width:46px;height:26px;background:#334;border-radius:13px;position:relative;cursor:pointer;flex-shrink:0}
 .tog.on{background:#818cf8}
-.tog::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s}
-.tog.on::after{transform:translateX(18px)}
-.sub-label{font-size:10px;color:#556;margin:4px 0 3px;text-transform:uppercase;letter-spacing:.5px}
+.tog::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s}
+.tog.on::after{transform:translateX(20px)}
+.sub-label{font-size:12px;color:#556;margin:6px 0 4px;text-transform:uppercase;letter-spacing:.5px}
 
 /* Font tags */
 .font-tags{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:6px;padding-bottom:2px}
 .font-tags::-webkit-scrollbar{display:none}
-.font-tag{flex-shrink:0;padding:4px 10px;background:#1a1a2e;border:1px solid #334;border-radius:12px;font-size:10px;color:#aaa;cursor:pointer}
+.font-tag{flex-shrink:0;padding:7px 14px;background:#1a1a2e;border:1px solid #334;border-radius:14px;font-size:13px;color:#aaa;cursor:pointer}
 .font-tag.active{border-color:#818cf8;color:#818cf8;background:rgba(129,140,248,.1)}
 
 /* Font upload */
-.font-up{border:1px dashed #334;border-radius:8px;padding:8px;text-align:center;cursor:pointer;font-size:11px;color:#667;margin-bottom:6px}
+.font-up{border:1px dashed #334;border-radius:8px;padding:12px;text-align:center;cursor:pointer;font-size:14px;color:#667;margin-bottom:8px}
 #fontFileInput{display:none}
 
 /* Template grid */
 .tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.tpl-card{border:1px solid #334;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:13px;min-height:56px;display:flex;align-items:center;justify-content:center;transition:border-color .2s;word-break:break-all;line-height:1.2}
+.tpl-card{border:1px solid #334;border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;font-size:15px;min-height:64px;display:flex;align-items:center;justify-content:center;transition:border-color .2s;word-break:break-all;line-height:1.2}
 .tpl-card:active{border-color:#818cf8;transform:scale(.97)}
 
 /* Gradient preview */
-.grad-preview{width:100%;height:24px;border-radius:6px;margin-bottom:6px;border:1px solid #334}
+.grad-preview{width:100%;height:30px;border-radius:6px;margin-bottom:8px;border:1px solid #334}
 </style>
 </head>
 <body>
@@ -134,6 +136,7 @@ input[type="color"]{width:32px;height:28px;border:none;border-radius:6px;cursor:
   <canvas id="previewCanvas"></canvas>
   <textarea id="textInput" placeholder="點此輸入文字，Enter 換行...">水電維修找我們</textarea>
   <div id="resizeBox">
+    <div class="rz-drag" id="rzDrag"></div>
     <div class="rz-handle tl" data-dir="tl"></div><div class="rz-handle tc" data-dir="tc"></div><div class="rz-handle tr" data-dir="tr"></div>
     <div class="rz-handle ml" data-dir="ml"></div><div class="rz-handle mr" data-dir="mr"></div>
     <div class="rz-handle bl" data-dir="bl"></div><div class="rz-handle bc" data-dir="bc"></div><div class="rz-handle br" data-dir="br"></div>
@@ -225,7 +228,8 @@ function initApp(){
     shadow:false,shadowAngle:45,shadowDist:4,shadowBlur:6,shadowOpacity:80,shadowColor:'#000000',
     neon:false,neonColor:'#818cf8',neonSize:15,neonIntensity:80,
     charBg:false,charBgShape:'circle',charBgSize:130,charBgColor:'#FFD15B',charBgOpacity:100,charBgRadius:8,charBgPadding:4,
-    bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20
+    bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20,
+    posX:0,posY:0
   };
   var state=JSON.parse(JSON.stringify(DEFAULTS));state.fonts=[];
 
@@ -279,7 +283,7 @@ function initApp(){
       h='<div class="sub-label">文字顏色</div>';
       h+='<div class="ctrl"><input type="color" id="textColor" value="'+state.textColor+'"><div class="color-row" id="textColorPresets"></div></div>';
       h+=mkRange('textOpacity','透明度','%',0,100);
-      h+='<div class="tog-row"><span style="font-size:12px">漸層</span><div class="tog'+(state.gradient?' on':'')+'" id="gradToggle"></div></div>';
+      h+='<div class="tog-row"><span style="font-size:14px">漸層</span><div class="tog'+(state.gradient?' on':'')+'" id="gradToggle"></div></div>';
       h+='<div id="gradControls" style="display:'+(state.gradient?'block':'none')+'">';
       h+='<div id="gradPreview" class="grad-preview"></div>';
       h+='<div class="ctrl"><span class="ctrl-label">色2</span><input type="color" id="gradColor2" value="'+state.gradColor2+'"></div>';
@@ -313,7 +317,7 @@ function initApp(){
       h+='</div>';
       break;
     case 'outline':
-      h='<div class="tog-row"><span style="font-size:12px">啟用描邊</span><div class="tog'+(state.stroke?' on':'')+'" id="strokeToggle"></div></div>';
+      h='<div class="tog-row"><span style="font-size:14px">啟用描邊</span><div class="tog'+(state.stroke?' on':'')+'" id="strokeToggle"></div></div>';
       h+='<div id="strokeControls" style="display:'+(state.stroke?'block':'none')+'">';
       h+='<div class="sub-label">外描邊</div>';
       h+=mkRange('strokeOutWidth','粗細','px',0,30);
@@ -324,7 +328,7 @@ function initApp(){
       h+='</div>';
       break;
     case 'shadow':
-      h='<div class="tog-row"><span style="font-size:12px">啟用陰影</span><div class="tog'+(state.shadow?' on':'')+'" id="shadowToggle"></div></div>';
+      h='<div class="tog-row"><span style="font-size:14px">啟用陰影</span><div class="tog'+(state.shadow?' on':'')+'" id="shadowToggle"></div></div>';
       h+='<div id="shadowControls" style="display:'+(state.shadow?'block':'none')+'">';
       h+=mkRange('shadowAngle','角度','\u00b0',0,360)+mkRange('shadowDist','距離','px',0,30);
       h+=mkRange('shadowBlur','模糊','px',0,30)+mkRange('shadowOpacity','透明度','%',0,100);
@@ -332,14 +336,14 @@ function initApp(){
       h+='</div>';
       break;
     case 'neon':
-      h='<div class="tog-row"><span style="font-size:12px">啟用霓虹</span><div class="tog'+(state.neon?' on':'')+'" id="neonToggle"></div></div>';
+      h='<div class="tog-row"><span style="font-size:14px">啟用霓虹</span><div class="tog'+(state.neon?' on':'')+'" id="neonToggle"></div></div>';
       h+='<div id="neonControls" style="display:'+(state.neon?'block':'none')+'">';
       h+='<div class="ctrl"><span class="ctrl-label">發光色</span><input type="color" id="neonColor" value="'+state.neonColor+'"><div class="color-row" id="neonColorPresets"></div></div>';
       h+=mkRange('neonSize','大小','px',5,40)+mkRange('neonIntensity','強度','%',10,100);
       h+='</div>';
       break;
     case 'charbg':
-      h='<div class="tog-row"><span style="font-size:12px">啟用逐字背景</span><div class="tog'+(state.charBg?' on':'')+'" id="charBgToggle"></div></div>';
+      h='<div class="tog-row"><span style="font-size:14px">啟用逐字背景</span><div class="tog'+(state.charBg?' on':'')+'" id="charBgToggle"></div></div>';
       h+='<div id="charBgControls" style="display:'+(state.charBg?'block':'none')+'">';
       h+='<div class="ctrl"><span class="ctrl-label">形狀</span><div class="btn-row"><button class="btn-s'+(state.charBgShape==='circle'?' active':'')+'" id="charBgCircleBtn">圓形</button><button class="btn-s'+(state.charBgShape==='square'?' active':'')+'" id="charBgSquareBtn">方形</button><button class="btn-s'+(state.charBgShape==='roundrect'?' active':'')+'" id="charBgRoundBtn">圓角</button></div></div>';
       h+=mkRange('charBgSize','大小','%',80,200)+mkRange('charBgRadius','圓角','px',0,30)+mkRange('charBgPadding','內距','px',0,20);
@@ -348,14 +352,14 @@ function initApp(){
       h+='</div>';
       break;
     case 'bg':
-      h='<div class="tog-row"><span style="font-size:12px">啟用背景框</span><div class="tog'+(state.bg?' on':'')+'" id="bgToggle"></div></div>';
+      h='<div class="tog-row"><span style="font-size:14px">啟用背景框</span><div class="tog'+(state.bg?' on':'')+'" id="bgToggle"></div></div>';
       h+='<div id="bgControls" style="display:'+(state.bg?'block':'none')+'">';
       h+='<div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="bgColor" value="'+state.bgColor+'"></div>';
       h+=mkRange('bgOpacity','透明度','%',0,100)+mkRange('bgRadius','圓角','px',0,40)+mkRange('bgPadding','內距','px',0,60);
       h+='</div>';
       break;
     case 'curve':
-      h='<div class="tog-row"><span style="font-size:12px">啟用弧形</span><div class="tog'+(state.curve?' on':'')+'" id="curveToggle"></div></div>';
+      h='<div class="tog-row"><span style="font-size:14px">啟用弧形</span><div class="tog'+(state.curve?' on':'')+'" id="curveToggle"></div></div>';
       h+='<div id="curveControls" style="display:'+(state.curve?'block':'none')+'">';
       h+=mkRange('curveRadius','弧度','',50,800);
       h+='<div class="ctrl"><span class="ctrl-label">方向</span><div class="btn-row"><button class="btn-s'+(!state.curveDown?' active':'')+'" id="curveUpBtn">向上</button><button class="btn-s'+(state.curveDown?' active':'')+'" id="curveDownBtn">向下</button></div></div>';
@@ -590,12 +594,15 @@ function initApp(){
   var resizeBox=document.getElementById('resizeBox');
   function positionResizeBox(){
     var canvas=document.getElementById('previewCanvas'),cR=canvas.getBoundingClientRect(),pR=document.getElementById('previewArea').getBoundingClientRect();
+    var ox=state.posX||0,oy=state.posY||0;
+    canvas.style.transform='translate('+ox+'px,'+oy+'px)';
     resizeBox.style.display='block';resizeBox.style.left=(cR.left-pR.left)+'px';resizeBox.style.top=(cR.top-pR.top)+'px';
     resizeBox.style.width=cR.width+'px';resizeBox.style.height=cR.height+'px';
   }
+  // Resize handles
   (function(){
     var startX=0,startY=0,startSize=0,dragging=false,dir='';
-    function onStart(e){e.preventDefault();saveHistory();dragging=true;dir=this.dataset.dir;var t=e.touches?e.touches[0]:e;startX=t.clientX;startY=t.clientY;startSize=state.fontSize}
+    function onStart(e){e.preventDefault();e.stopPropagation();saveHistory();dragging=true;dir=this.dataset.dir;var t=e.touches?e.touches[0]:e;startX=t.clientX;startY=t.clientY;startSize=state.fontSize}
     function onMove(e){if(!dragging)return;e.preventDefault();var t=e.touches?e.touches[0]:e,dx=t.clientX-startX,dy=startY-t.clientY,d=0;
       if(dir==='br'||dir==='tr')d=(dx+dy)/2;else if(dir==='bl'||dir==='tl')d=(-dx+dy)/2;
       else if(dir==='tc')d=dy;else if(dir==='bc')d=-dy;else if(dir==='mr')d=dx;else if(dir==='ml')d=-dx;
@@ -603,6 +610,16 @@ function initApp(){
       var el=document.getElementById('fontSize');if(el){el.value=nv;setText('fontSizeVal',nv+'px')}render()}
     function onEnd(){dragging=false}
     document.querySelectorAll('.rz-handle').forEach(function(h){h.addEventListener('mousedown',onStart);h.addEventListener('touchstart',onStart,{passive:false})});
+    document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onEnd);document.addEventListener('touchend',onEnd);
+  })();
+  // Drag to move
+  (function(){
+    var dragEl=document.getElementById('rzDrag'),dragging=false,startX=0,startY=0,startPX=0,startPY=0;
+    function onStart(e){e.preventDefault();e.stopPropagation();saveHistory();dragging=true;var t=e.touches?e.touches[0]:e;startX=t.clientX;startY=t.clientY;startPX=state.posX||0;startPY=state.posY||0}
+    function onMove(e){if(!dragging)return;e.preventDefault();var t=e.touches?e.touches[0]:e;state.posX=startPX+(t.clientX-startX);state.posY=startPY+(t.clientY-startY);positionResizeBox()}
+    function onEnd(){dragging=false}
+    dragEl.addEventListener('mousedown',onStart);dragEl.addEventListener('touchstart',onStart,{passive:false});
     document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
     document.addEventListener('mouseup',onEnd);document.addEventListener('touchend',onEnd);
   })();
