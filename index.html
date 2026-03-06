@@ -272,20 +272,47 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   });
 
   document.getElementById('fontFileInput').addEventListener('change', function(e) {
-    Array.from(e.target.files).forEach(function(file) {
+    var files = e.target.files;
+    if (!files || files.length === 0) return;
+    var area = document.getElementById('fontUploadArea');
+    var statusEl = area.querySelector('div:last-child');
+
+    Array.from(files).forEach(function(file) {
       var fontName = file.name.replace(/\.(ttf|otf|woff2?)$/i, '');
-      file.arrayBuffer().then(function(buf) {
-        var font = new FontFace(fontName, buf);
-        return font.load();
-      }).then(function(loadedFont) {
-        document.fonts.add(loadedFont);
-        state.fonts.push(fontName);
-        state.activeFont = fontName;
-        renderFontList();
-        render();
-      });
+      statusEl.textContent = '載入中: ' + fontName + '...';
+
+      var reader = new FileReader();
+      reader.onload = function(evt) {
+        var buf = evt.target.result;
+        try {
+          var font = new FontFace(fontName, buf);
+          font.load().then(function(loadedFont) {
+            document.fonts.add(loadedFont);
+            if (state.fonts.indexOf(fontName) === -1) {
+              state.fonts.push(fontName);
+            }
+            state.activeFont = fontName;
+            area.classList.add('has-font');
+            statusEl.textContent = '已載入: ' + state.fonts.join(', ');
+            renderFontList();
+            render();
+          }).catch(function(err) {
+            statusEl.textContent = '字體載入失敗: ' + err.message;
+            statusEl.style.color = '#f87171';
+          });
+        } catch(err) {
+          statusEl.textContent = '字體格式錯誤: ' + err.message;
+          statusEl.style.color = '#f87171';
+        }
+      };
+      reader.onerror = function() {
+        statusEl.textContent = '檔案讀取失敗，請重試';
+        statusEl.style.color = '#f87171';
+      };
+      reader.readAsArrayBuffer(file);
     });
-    document.getElementById('fontUploadArea').classList.add('has-font');
+    // Reset input so same file can be re-selected
+    e.target.value = '';
   });
 
   function renderFontList() {
