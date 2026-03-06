@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IG 文字貼紙產生器</title>
+<style>
+@font-face { font-family: 'jinxuan'; src: url('fonts/jinxuan-bold.woff2') format('woff2'); }
+@font-face { font-family: 'jinxuanlatte'; src: url('fonts/jinxuanlatte-bold.woff2') format('woff2'); }
+@font-face { font-family: 'lihsianti'; src: url('fonts/lihsianti.woff2') format('woff2'); }
+@font-face { font-family: 'tsuhsianti'; src: url('fonts/tsuhsianti.woff2') format('woff2'); }
+@font-face { font-family: 'burnfont'; src: url('fonts/burnfont.woff2') format('woff2'); }
+@font-face { font-family: 'creamfont'; src: url('fonts/creamfont.woff2') format('woff2'); }
+@font-face { font-family: 'twroadfont'; src: url('fonts/twroadfont.woff2') format('woff2'); }
+@font-face { font-family: 'mantou'; src: url('fonts/MantouSans.woff2') format('woff2'); }
+@font-face { font-family: 'biantao'; src: url('fonts/ZiHunBianTaoTi.woff2') format('woff2'); }
+@font-face { font-family: 'toutou'; src: url('fonts/toutou.woff2') format('woff2'); }
+@font-face { font-family: 'aidcumian'; src: url('fonts/aidcumian.woff2') format('woff2'); }
+@font-face { font-family: 'aidcumian-mono'; src: url('fonts/aidcumian-mono.woff2') format('woff2'); }
+@font-face { font-family: 'genjyuu-thin'; src: url('fonts/genjyuu-thin.woff2') format('woff2'); }
+@font-face { font-family: 'genjyuu-regular'; src: url('fonts/genjyuu-regular.woff2') format('woff2'); }
+@font-face { font-family: 'genjyuu-bold'; src: url('fonts/genjyuu-bold.woff2') format('woff2'); }
+@font-face { font-family: 'maoken-song'; src: url('fonts/maoken-song.woff2') format('woff2'); }
+@font-face { font-family: 'pixel-song'; src: url('fonts/pixel-song.woff2') format('woff2'); }
+@font-face { font-family: 'qiji-classic'; src: url('fonts/qiji-classic.woff2') format('woff2'); }
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* Header bar */
+#headerBar{flex-shrink:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#0d1117;border-bottom:1px solid #1e2a4a}
+#headerBar .hb-left,#headerBar .hb-right{display:flex;gap:8px;align-items:center}
+.hb-btn{padding:6px 12px;background:#1a1a2e;border:1px solid #334;border-radius:6px;color:#8899aa;font-size:12px;cursor:pointer;white-space:nowrap}
+.hb-btn:active{opacity:.7}
+.hb-btn.danger{color:#f87171;border-color:#534}
+.hb-btn.save{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;font-weight:600}
+
+/* Preview */
+#previewArea{flex:1;min-height:0;background:#2a2a2a;display:flex;align-items:center;justify-content:center;padding:12px;position:relative;overflow:hidden}
+#previewCanvas{max-width:100%;max-height:100%}
+#resizeBox{position:absolute;border:1.5px dashed rgba(129,140,248,.7);pointer-events:none;display:none}
+.rz-handle{position:absolute;width:16px;height:16px;background:#818cf8;border:2px solid #fff;border-radius:3px;pointer-events:auto;touch-action:none;z-index:2}
+.rz-handle.tl{top:-8px;left:-8px;cursor:nwse-resize}.rz-handle.tr{top:-8px;right:-8px;cursor:nesw-resize}
+.rz-handle.bl{bottom:-8px;left:-8px;cursor:nesw-resize}.rz-handle.br{bottom:-8px;right:-8px;cursor:nwse-resize}
+.rz-handle.tc{top:-8px;left:50%;margin-left:-8px;cursor:ns-resize}.rz-handle.bc{bottom:-8px;left:50%;margin-left:-8px;cursor:ns-resize}
+.rz-handle.ml{top:50%;margin-top:-8px;left:-8px;cursor:ew-resize}.rz-handle.mr{top:50%;margin-top:-8px;right:-8px;cursor:ew-resize}
+#textInput{position:absolute;background:transparent;border:none;color:transparent;caret-color:#818cf8;font-size:18px;resize:none;z-index:3;padding:8px;outline:none;text-align:center;overflow:hidden;pointer-events:auto;width:80%;height:60%;top:20%;left:10%}
+
+/* Tool bar (ViviSticker keyboard-tool style) */
+#toolBar{flex-shrink:0;display:flex;background:#0f1529;border-top:1px solid #1e2a4a;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 4px}
+#toolBar::-webkit-scrollbar{display:none}
+.tool-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;cursor:pointer;min-width:52px}
+.tool-item .t-icon{font-size:18px;line-height:1}
+.tool-item .t-label{font-size:9px;color:#667;white-space:nowrap}
+.tool-item.active .t-icon,.tool-item.active .t-label{color:#818cf8}
+
+/* Panel */
+#panelArea{flex-shrink:0;max-height:35vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px;background:#111827;border-top:1px solid #1e2a4a;display:none}
+
+/* Controls */
+.ctrl{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ctrl-label{flex-shrink:0;width:56px;font-size:11px;color:#8899aa}
+input[type="range"]{flex:1;accent-color:#818cf8;height:4px}
+.ctrl-val{width:40px;text-align:right;font-size:11px;color:#818cf8;font-variant-numeric:tabular-nums}
+input[type="color"]{width:32px;height:28px;border:none;border-radius:6px;cursor:pointer;background:none}
+
+/* Chips */
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.chip{padding:5px 9px;background:#1a1a2e;border:1px solid #334;border-radius:8px;font-size:11px;color:#ccc;cursor:pointer}
+.chip.active{border-color:#818cf8;color:#818cf8;background:rgba(129,140,248,.1)}
+.btn-row{display:flex;gap:4px;flex-wrap:wrap}
+.btn-s{padding:4px 10px;background:#1a1a2e;border:1px solid #334;border-radius:6px;color:#ccc;font-size:11px;cursor:pointer}
+.btn-s.active{border-color:#818cf8;color:#818cf8;background:rgba(129,140,248,.1)}
+
+/* Color */
+.color-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.cdot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0}
+.cdot.active{border-color:#fff}
+
+/* Toggle */
+.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tog{width:38px;height:20px;background:#334;border-radius:10px;position:relative;cursor:pointer;flex-shrink:0}
+.tog.on{background:#818cf8}
+.tog::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s}
+.tog.on::after{transform:translateX(18px)}
+.sub-label{font-size:10px;color:#556;margin:4px 0 3px;text-transform:uppercase;letter-spacing:.5px}
+
+/* Font tags */
+.font-tags{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:6px;padding-bottom:2px}
+.font-tags::-webkit-scrollbar{display:none}
+.font-tag{flex-shrink:0;padding:4px 10px;background:#1a1a2e;border:1px solid #334;border-radius:12px;font-size:10px;color:#aaa;cursor:pointer}
+.font-tag.active{border-color:#818cf8;color:#818cf8;background:rgba(129,140,248,.1)}
+
+/* Font upload */
+.font-up{border:1px dashed #334;border-radius:8px;padding:8px;text-align:center;cursor:pointer;font-size:11px;color:#667;margin-bottom:6px}
+#fontFileInput{display:none}
+
+/* Template grid */
+.tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tpl-card{border:1px solid #334;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:13px;min-height:56px;display:flex;align-items:center;justify-content:center;transition:border-color .2s;word-break:break-all;line-height:1.2}
+.tpl-card:active{border-color:#818cf8;transform:scale(.97)}
+
+/* Gradient preview */
+.grad-preview{width:100%;height:24px;border-radius:6px;margin-bottom:6px;border:1px solid #334}
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div id="lockScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a2e;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <div style="font-size:40px">&#x1f512;</div>
+  <div style="font-size:16px;color:#8899aa">請輸入密碼</div>
+  <input type="password" id="pwdInput" placeholder="密碼" style="width:200px;padding:12px;border-radius:8px;border:1px solid #334;background:#16213e;color:#fff;font-size:16px;text-align:center">
+  <button id="pwdBtn" style="padding:12px 40px;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer">進入</button>
+  <div id="pwdError" style="color:#f87171;font-size:13px;display:none">密碼錯誤</div>
+</div>
+
+<div id="mainContent" style="display:none;height:100vh;display:none;flex-direction:column">
+
+<!-- Header Bar -->
+<div id="headerBar">
+  <div class="hb-left">
+    <button class="hb-btn" id="undoBtn">&#x21a9; 復原</button>
+    <button class="hb-btn" id="redoBtn">&#x21aa; 重做</button>
+  </div>
+  <div class="hb-right">
+    <button class="hb-btn danger" id="resetBtn">&#x27f3; 重置</button>
+    <button class="hb-btn save" id="saveBtn">儲存</button>
+  </div>
+</div>
+
+<!-- Preview -->
+<div id="previewArea">
+  <canvas id="previewCanvas"></canvas>
+  <textarea id="textInput" placeholder="點此輸入文字，Enter 換行...">水電維修找我們</textarea>
+  <div id="resizeBox">
+    <div class="rz-handle tl" data-dir="tl"></div><div class="rz-handle tc" data-dir="tc"></div><div class="rz-handle tr" data-dir="tr"></div>
+    <div class="rz-handle ml" data-dir="ml"></div><div class="rz-handle mr" data-dir="mr"></div>
+    <div class="rz-handle bl" data-dir="bl"></div><div class="rz-handle bc" data-dir="bc"></div><div class="rz-handle br" data-dir="br"></div>
+  </div>
+</div>
+
+<!-- Tool Bar -->
+<div id="toolBar">
+  <div class="tool-item" data-tool="font"><span class="t-icon">Aa</span><span class="t-label">字體</span></div>
+  <div class="tool-item" data-tool="size"><span class="t-icon">T&#x2195;</span><span class="t-label">大小</span></div>
+  <div class="tool-item" data-tool="color"><span class="t-icon">&#x1f3a8;</span><span class="t-label">顏色</span></div>
+  <div class="tool-item" data-tool="format"><span class="t-icon">B</span><span class="t-label">格式</span></div>
+  <div class="tool-item" data-tool="spacing"><span class="t-icon">&#x2263;</span><span class="t-label">間距</span></div>
+  <div class="tool-item" data-tool="align"><span class="t-icon">&#x2261;</span><span class="t-label">對齊</span></div>
+  <div class="tool-item" data-tool="vertical"><span class="t-icon">&#x2503;</span><span class="t-label">直書</span></div>
+  <div class="tool-item" data-tool="outline"><span class="t-icon">&#x25a1;</span><span class="t-label">描邊</span></div>
+  <div class="tool-item" data-tool="shadow"><span class="t-icon">&#x25e8;</span><span class="t-label">陰影</span></div>
+  <div class="tool-item" data-tool="neon"><span class="t-icon">&#x2728;</span><span class="t-label">霓虹</span></div>
+  <div class="tool-item" data-tool="charbg"><span class="t-icon">&#x25cf;</span><span class="t-label">字背景</span></div>
+  <div class="tool-item" data-tool="bg"><span class="t-icon">&#x25a3;</span><span class="t-label">背景框</span></div>
+  <div class="tool-item" data-tool="curve"><span class="t-icon">&#x2312;</span><span class="t-label">弧形</span></div>
+  <div class="tool-item" data-tool="flip"><span class="t-icon">&#x21c4;</span><span class="t-label">翻轉</span></div>
+  <div class="tool-item" data-tool="tpl"><span class="t-icon">&#x2605;</span><span class="t-label">模板</span></div>
+</div>
+
+<!-- Panel -->
+<div id="panelArea"></div>
+
+</div><!-- mainContent -->
+
+<script>
+(function(){
+  var PASS_HASH='e242af95d49d290521a2b0730473a1b7e053d4b244e0189876569943bef840d1';
+  async function sha256(s){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
+  async function checkPwd(){
+    var h=await sha256(document.getElementById('pwdInput').value);
+    if(h===PASS_HASH){document.getElementById('lockScreen').style.display='none';var m=document.getElementById('mainContent');m.style.display='flex';initApp()}
+    else{document.getElementById('pwdError').style.display='block'}
+  }
+  document.getElementById('pwdBtn').addEventListener('click',checkPwd);
+  document.getElementById('pwdInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPwd()});
+  try{if(sessionStorage.getItem('ig-sticker-auth')==='1'){document.getElementById('lockScreen').style.display='none';document.getElementById('mainContent').style.display='flex';setTimeout(initApp,0)}}catch(e){}
+
+function initApp(){
+  try{sessionStorage.setItem('ig-sticker-auth','1')}catch(e){}
+
+  // === FONTS ===
+  var BUILTIN_FONTS=[
+    {id:'jinxuan',name:'金萱粗體',tags:['標題']},{id:'jinxuanlatte',name:'金萱那堤',tags:['標題']},
+    {id:'lihsianti',name:'粒線體',tags:['黑體']},{id:'tsuhsianti',name:'粗線體',tags:['黑體']},
+    {id:'burnfont',name:'激燃體',tags:['標題']},{id:'creamfont',name:'凝書體',tags:['圓體']},
+    {id:'twroadfont',name:'道路體',tags:['黑體']},{id:'mantou',name:'饅頭黑體',tags:['黑體']},
+    {id:'biantao',name:'扁桃體',tags:['圓體']},{id:'toutou',name:'偷偷心動體',tags:['圓體']},
+    {id:'aidcumian',name:'愛ㄉ粗麵體',tags:['標題']},{id:'aidcumian-mono',name:'愛ㄉ粗麵體等寬',tags:['標題']},
+    {id:'genjyuu-thin',name:'源柔圓體極細',tags:['圓體','內文']},{id:'genjyuu-regular',name:'源柔圓體標準',tags:['圓體','內文']},
+    {id:'genjyuu-bold',name:'源柔圓體粗體',tags:['圓體']},{id:'maoken-song',name:'貓啃風雅宋',tags:['明體']},
+    {id:'pixel-song',name:'點陣宋體',tags:['明體','斑駁']},{id:'qiji-classic',name:'齊伋體古風',tags:['楷體']}
+  ];
+  var FONT_TAGS=['全部','標題','圓體','黑體','明體','楷體','斑駁','內文'];
+
+  // === TEMPLATES ===
+  var TEMPLATES=[
+    {name:'霓虹派對',style:{textColor:'#ff6ec7',neon:true,neonColor:'#ff6ec7',neonSize:15,neonIntensity:80,stroke:false,shadow:false,bg:false}},
+    {name:'韓系光暈',style:{textColor:'#ffffff',neon:true,neonColor:'#a78bfa',neonSize:20,neonIntensity:60,stroke:false,shadow:false,bg:false}},
+    {name:'冰藍霓虹',style:{textColor:'#38bdf8',neon:true,neonColor:'#38bdf8',neonSize:18,neonIntensity:70,stroke:false,shadow:false,bg:false}},
+    {name:'經典描邊',style:{textColor:'#ffffff',stroke:true,strokeOutWidth:8,strokeOutColor:'#000000',strokeInWidth:0,neon:false,shadow:false,bg:false}},
+    {name:'雙色描邊',style:{textColor:'#facc15',stroke:true,strokeOutWidth:6,strokeOutColor:'#000000',strokeInWidth:4,strokeInColor:'#ffffff',neon:false,shadow:false}},
+    {name:'粉彩描邊',style:{textColor:'#fda4af',stroke:true,strokeOutWidth:8,strokeOutColor:'#ffffff',strokeInWidth:0,neon:false,shadow:false}},
+    {name:'立體陰影',style:{textColor:'#ffffff',shadow:true,shadowAngle:135,shadowDist:6,shadowBlur:0,shadowOpacity:100,shadowColor:'#6366f1',stroke:false,neon:false}},
+    {name:'柔和陰影',style:{textColor:'#ffffff',shadow:true,shadowAngle:45,shadowDist:4,shadowBlur:10,shadowOpacity:60,shadowColor:'#000000',stroke:false,neon:false}},
+    {name:'偶像應援',style:{textColor:'#ffffff',stroke:true,strokeOutWidth:6,strokeOutColor:'#ec4899',strokeInWidth:3,strokeInColor:'#fbbf24',shadow:true,shadowAngle:135,shadowDist:3,shadowBlur:0,shadowOpacity:100,shadowColor:'#7c3aed',neon:false}},
+    {name:'泡泡背景',style:{textColor:'#000000',charBg:true,charBgShape:'circle',charBgSize:140,charBgColor:'#fbbf24',charBgOpacity:100,stroke:false,shadow:false,neon:false}},
+    {name:'方塊背景',style:{textColor:'#ffffff',charBg:true,charBgShape:'square',charBgSize:120,charBgColor:'#6366f1',charBgOpacity:90,charBgRadius:8,stroke:false,shadow:false,neon:false}},
+    {name:'軟萌粉',style:{textColor:'#ffffff',bg:true,bgColor:'#fda4af',bgOpacity:90,bgRadius:20,bgPadding:24,stroke:false,shadow:false,neon:false}},
+    {name:'漸層描邊',style:{textColor:'#ffffff',gradient:true,gradColor2:'#818cf8',gradAngle:90,stroke:true,strokeOutWidth:5,strokeOutColor:'#000000',neon:false,shadow:false}},
+    {name:'彩虹漸層',style:{gradient:true,textColor:'#f87171',gradColor2:'#38bdf8',gradAngle:0,stroke:true,strokeOutWidth:4,strokeOutColor:'#ffffff',neon:false,shadow:false}},
+    {name:'清除全部',style:{stroke:false,shadow:false,neon:false,charBg:false,bg:false,gradient:false,bold:false,italic:false,underline:false,strike:false,flipH:false,flipV:false,curve:false,rotation:0,textColor:'#ffffff',textOpacity:100}}
+  ];
+
+  // === STATE ===
+  var DEFAULTS={
+    fonts:[],activeFont:'jinxuan',text:'水電維修找我們',
+    fontSize:64,lineHeight:130,letterSpacing:0,textColor:'#ffffff',textOpacity:100,
+    gradient:false,gradColor2:'#818cf8',gradAngle:90,
+    align:'center',vertical:false,rotation:0,bold:false,italic:false,underline:false,strike:false,
+    flipH:false,flipV:false,
+    curve:false,curveRadius:300,curveDown:false,
+    stroke:false,strokeOutWidth:6,strokeOutColor:'#000000',strokeInWidth:0,strokeInColor:'#ffffff',
+    shadow:false,shadowAngle:45,shadowDist:4,shadowBlur:6,shadowOpacity:80,shadowColor:'#000000',
+    neon:false,neonColor:'#818cf8',neonSize:15,neonIntensity:80,
+    charBg:false,charBgShape:'circle',charBgSize:130,charBgColor:'#FFD15B',charBgOpacity:100,charBgRadius:8,charBgPadding:4,
+    bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20
+  };
+  var state=JSON.parse(JSON.stringify(DEFAULTS));state.fonts=[];
+
+  // Undo/Redo
+  var undoStack=[],redoStack=[],maxHist=40;
+  function saveHistory(){undoStack.push(JSON.stringify(state));if(undoStack.length>maxHist)undoStack.shift();redoStack=[]}
+  function doUndo(){if(!undoStack.length)return;redoStack.push(JSON.stringify(state));var p=JSON.parse(undoStack.pop());var f=state.fonts;Object.keys(p).forEach(function(k){state[k]=p[k]});state.fonts=f;syncUI();render()}
+  function doRedo(){if(!redoStack.length)return;undoStack.push(JSON.stringify(state));var p=JSON.parse(redoStack.pop());var f=state.fonts;Object.keys(p).forEach(function(k){state[k]=p[k]});state.fonts=f;syncUI();render()}
+
+  // Recent fonts/colors (localStorage)
+  var recentFonts=[],recentColors=[];
+  try{recentFonts=JSON.parse(localStorage.getItem('ig-stk-rf'))||[]}catch(e){}
+  try{recentColors=JSON.parse(localStorage.getItem('ig-stk-rc'))||[]}catch(e){}
+  function addRecentFont(id){recentFonts=recentFonts.filter(function(x){return x!==id});recentFonts.unshift(id);if(recentFonts.length>8)recentFonts.pop();try{localStorage.setItem('ig-stk-rf',JSON.stringify(recentFonts))}catch(e){}}
+  function addRecentColor(c){c=c.toLowerCase();recentColors=recentColors.filter(function(x){return x!==c});recentColors.unshift(c);if(recentColors.length>12)recentColors.pop();try{localStorage.setItem('ig-stk-rc',JSON.stringify(recentColors))}catch(e){}}
+
+  var SCALE=4;
+  var presets=['#ffffff','#000000','#f87171','#fb923c','#facc15','#4ade80','#38bdf8','#818cf8','#e879f9','#EABA28','#437FFF','#ff6ec7'];
+  function setText(id,t){var e=document.getElementById(id);if(e)e.textContent=t}
+
+  // === TOOL BAR & PANELS ===
+  var activeTool='';
+  var panelArea=document.getElementById('panelArea');
+  document.querySelectorAll('.tool-item').forEach(function(t){
+    t.addEventListener('click',function(){
+      var tool=t.dataset.tool;
+      if(tool===activeTool){activeTool='';panelArea.style.display='none';t.classList.remove('active');return}
+      document.querySelectorAll('.tool-item').forEach(function(x){x.classList.remove('active')});
+      t.classList.add('active');activeTool=tool;
+      showPanel(tool);
+    });
+  });
+
+  function showPanel(tool){
+    panelArea.style.display='block';
+    panelArea.innerHTML='';
+    var h='';
+    switch(tool){
+    case 'font':
+      h='<div class="sub-label">最近使用</div><div class="chips" id="recentFontList"></div>';
+      h+='<div class="font-tags" id="fontTags"></div>';
+      h+='<div class="chips" id="builtinFontList"></div>';
+      h+='<div class="sub-label">上傳自訂字體</div><div class="font-up" id="fontUploadArea">+ TTF / OTF / WOFF2</div>';
+      h+='<input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" multiple style="display:none">';
+      h+='<div class="chips" id="customFontList"></div>';
+      break;
+    case 'size':
+      h=mkRange('fontSize','大小','px',12,200)+mkRange('rotation','旋轉','\u00b0',-180,180);
+      break;
+    case 'color':
+      h='<div class="sub-label">文字顏色</div>';
+      h+='<div class="ctrl"><input type="color" id="textColor" value="'+state.textColor+'"><div class="color-row" id="textColorPresets"></div></div>';
+      h+=mkRange('textOpacity','透明度','%',0,100);
+      h+='<div class="tog-row"><span style="font-size:12px">漸層</span><div class="tog'+(state.gradient?' on':'')+'" id="gradToggle"></div></div>';
+      h+='<div id="gradControls" style="display:'+(state.gradient?'block':'none')+'">';
+      h+='<div id="gradPreview" class="grad-preview"></div>';
+      h+='<div class="ctrl"><span class="ctrl-label">色2</span><input type="color" id="gradColor2" value="'+state.gradColor2+'"></div>';
+      h+=mkRange('gradAngle','角度','\u00b0',0,360);
+      h+='</div>';
+      h+='<div class="sub-label">最近使用</div><div class="color-row" id="recentColorRow"></div>';
+      break;
+    case 'format':
+      h='<div class="btn-row" style="gap:6px">';
+      h+='<button class="btn-s'+(state.bold?' active':'')+'" id="boldBtn" style="font-weight:bold;min-width:40px">粗</button>';
+      h+='<button class="btn-s'+(state.italic?' active':'')+'" id="italicBtn" style="font-style:italic;min-width:40px">斜</button>';
+      h+='<button class="btn-s'+(state.underline?' active':'')+'" id="underlineBtn" style="text-decoration:underline;min-width:40px">底線</button>';
+      h+='<button class="btn-s'+(state.strike?' active':'')+'" id="strikeBtn" style="text-decoration:line-through;min-width:40px">刪除</button>';
+      h+='</div>';
+      break;
+    case 'spacing':
+      h=mkRange('lineHeight','行距','%',80,250)+mkRange('letterSpacing','字距','px',-10,30);
+      break;
+    case 'align':
+      h='<div class="btn-row" style="gap:6px">';
+      ['left','center','right','justify'].forEach(function(a){
+        var lb={left:'左',center:'中',right:'右',justify:'兩端'}[a];
+        h+='<button class="btn-s'+(state.align===a?' active':'')+'" data-align="'+a+'" style="min-width:44px">'+lb+'</button>';
+      });
+      h+='</div>';
+      break;
+    case 'vertical':
+      h='<div class="btn-row" style="gap:6px">';
+      h+='<button class="btn-s'+(!state.vertical?' active':'')+'" id="horizBtn" style="min-width:60px">橫排</button>';
+      h+='<button class="btn-s'+(state.vertical?' active':'')+'" id="vertBtn" style="min-width:60px">直排</button>';
+      h+='</div>';
+      break;
+    case 'outline':
+      h='<div class="tog-row"><span style="font-size:12px">啟用描邊</span><div class="tog'+(state.stroke?' on':'')+'" id="strokeToggle"></div></div>';
+      h+='<div id="strokeControls" style="display:'+(state.stroke?'block':'none')+'">';
+      h+='<div class="sub-label">外描邊</div>';
+      h+=mkRange('strokeOutWidth','粗細','px',0,30);
+      h+='<div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="strokeOutColor" value="'+state.strokeOutColor+'"><div class="color-row" id="strokeOutColorPresets"></div></div>';
+      h+='<div class="sub-label">內描邊</div>';
+      h+=mkRange('strokeInWidth','粗細','px',0,20);
+      h+='<div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="strokeInColor" value="'+state.strokeInColor+'"></div>';
+      h+='</div>';
+      break;
+    case 'shadow':
+      h='<div class="tog-row"><span style="font-size:12px">啟用陰影</span><div class="tog'+(state.shadow?' on':'')+'" id="shadowToggle"></div></div>';
+      h+='<div id="shadowControls" style="display:'+(state.shadow?'block':'none')+'">';
+      h+=mkRange('shadowAngle','角度','\u00b0',0,360)+mkRange('shadowDist','距離','px',0,30);
+      h+=mkRange('shadowBlur','模糊','px',0,30)+mkRange('shadowOpacity','透明度','%',0,100);
+      h+='<div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="shadowColor" value="'+state.shadowColor+'"></div>';
+      h+='</div>';
+      break;
+    case 'neon':
+      h='<div class="tog-row"><span style="font-size:12px">啟用霓虹</span><div class="tog'+(state.neon?' on':'')+'" id="neonToggle"></div></div>';
+      h+='<div id="neonControls" style="display:'+(state.neon?'block':'none')+'">';
+      h+='<div class="ctrl"><span class="ctrl-label">發光色</span><input type="color" id="neonColor" value="'+state.neonColor+'"><div class="color-row" id="neonColorPresets"></div></div>';
+      h+=mkRange('neonSize','大小','px',5,40)+mkRange('neonIntensity','強度','%',10,100);
+      h+='</div>';
+      break;
+    case 'charbg':
+      h='<div class="tog-row"><span style="font-size:12px">啟用逐字背景</span><div class="tog'+(state.charBg?' on':'')+'" id="charBgToggle"></div></div>';
+      h+='<div id="charBgControls" style="display:'+(state.charBg?'block':'none')+'">';
+      h+='<div class="ctrl"><span class="ctrl-label">形狀</span><div class="btn-row"><button class="btn-s'+(state.charBgShape==='circle'?' active':'')+'" id="charBgCircleBtn">圓形</button><button class="btn-s'+(state.charBgShape==='square'?' active':'')+'" id="charBgSquareBtn">方形</button><button class="btn-s'+(state.charBgShape==='roundrect'?' active':'')+'" id="charBgRoundBtn">圓角</button></div></div>';
+      h+=mkRange('charBgSize','大小','%',80,200)+mkRange('charBgRadius','圓角','px',0,30)+mkRange('charBgPadding','內距','px',0,20);
+      h+='<div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="charBgColor" value="'+state.charBgColor+'"><div class="color-row" id="charBgColorPresets"></div></div>';
+      h+=mkRange('charBgOpacity','透明度','%',0,100);
+      h+='</div>';
+      break;
+    case 'bg':
+      h='<div class="tog-row"><span style="font-size:12px">啟用背景框</span><div class="tog'+(state.bg?' on':'')+'" id="bgToggle"></div></div>';
+      h+='<div id="bgControls" style="display:'+(state.bg?'block':'none')+'">';
+      h+='<div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="bgColor" value="'+state.bgColor+'"></div>';
+      h+=mkRange('bgOpacity','透明度','%',0,100)+mkRange('bgRadius','圓角','px',0,40)+mkRange('bgPadding','內距','px',0,60);
+      h+='</div>';
+      break;
+    case 'curve':
+      h='<div class="tog-row"><span style="font-size:12px">啟用弧形</span><div class="tog'+(state.curve?' on':'')+'" id="curveToggle"></div></div>';
+      h+='<div id="curveControls" style="display:'+(state.curve?'block':'none')+'">';
+      h+=mkRange('curveRadius','弧度','',50,800);
+      h+='<div class="ctrl"><span class="ctrl-label">方向</span><div class="btn-row"><button class="btn-s'+(!state.curveDown?' active':'')+'" id="curveUpBtn">向上</button><button class="btn-s'+(state.curveDown?' active':'')+'" id="curveDownBtn">向下</button></div></div>';
+      h+='</div>';
+      break;
+    case 'flip':
+      h='<div class="btn-row" style="gap:6px">';
+      h+='<button class="btn-s'+(state.flipH?' active':'')+'" id="flipHBtn" style="min-width:70px">水平翻轉</button>';
+      h+='<button class="btn-s'+(state.flipV?' active':'')+'" id="flipVBtn" style="min-width:70px">垂直翻轉</button>';
+      h+='</div>';
+      break;
+    case 'tpl':
+      h='<div class="tpl-grid" id="tplGrid"></div>';
+      break;
+    }
+    panelArea.innerHTML=h;
+    bindPanel(tool);
+  }
+
+  function mkRange(id,label,unit,min,max){
+    return '<div class="ctrl"><span class="ctrl-label">'+label+'</span><input type="range" id="'+id+'" min="'+min+'" max="'+max+'" value="'+state[id]+'"><span class="ctrl-val" id="'+id+'Val">'+state[id]+unit+'</span></div>';
+  }
+
+  // === BIND PANEL EVENTS ===
+  function bindPanel(tool){
+    // Range inputs
+    panelArea.querySelectorAll('input[type="range"]').forEach(function(e){
+      var id=e.id;
+      var units={fontSize:'px',lineHeight:'%',letterSpacing:'px',textOpacity:'%',rotation:'\u00b0',
+        strokeOutWidth:'px',strokeInWidth:'px',shadowAngle:'\u00b0',shadowDist:'px',shadowBlur:'px',shadowOpacity:'%',
+        neonSize:'px',neonIntensity:'%',charBgSize:'%',charBgRadius:'px',charBgPadding:'px',charBgOpacity:'%',
+        bgOpacity:'%',bgRadius:'px',bgPadding:'px',curveRadius:'',gradAngle:'\u00b0'};
+      e.addEventListener('input',function(){state[id]=parseInt(e.value);setText(id+'Val',e.value+(units[id]||''));render()});
+      e.addEventListener('pointerdown',function(){saveHistory()});
+    });
+
+    // Color inputs
+    panelArea.querySelectorAll('input[type="color"]').forEach(function(e){
+      e.addEventListener('input',function(){state[e.id]=e.value;if(e.id==='textColor'||e.id==='gradColor2')updateGradPreview();render()});
+      e.addEventListener('change',function(){addRecentColor(e.value)});
+      e.addEventListener('pointerdown',function(){saveHistory()});
+    });
+
+    // Color presets
+    function mkPresets(cid,iid){
+      var c=document.getElementById(cid);if(!c)return;
+      presets.forEach(function(cl){var d=document.createElement('div');d.className='cdot';d.style.background=cl;
+        d.addEventListener('click',function(){saveHistory();var inp=document.getElementById(iid);inp.value=cl;inp.dispatchEvent(new Event('input'));addRecentColor(cl)});c.appendChild(d)});
+    }
+    mkPresets('textColorPresets','textColor');mkPresets('strokeOutColorPresets','strokeOutColor');
+    mkPresets('charBgColorPresets','charBgColor');mkPresets('neonColorPresets','neonColor');
+
+    // Recent colors
+    var rcRow=document.getElementById('recentColorRow');
+    if(rcRow){recentColors.forEach(function(cl){var d=document.createElement('div');d.className='cdot';d.style.background=cl;
+      d.addEventListener('click',function(){saveHistory();var inp=document.getElementById('textColor');if(inp){inp.value=cl;inp.dispatchEvent(new Event('input'))}});rcRow.appendChild(d)})}
+
+    // Toggles
+    function bindTog(tid,cid,sk){var el=document.getElementById(tid);if(!el)return;el.addEventListener('click',function(){saveHistory();state[sk]=!state[sk];el.classList.toggle('on',state[sk]);if(cid){var c=document.getElementById(cid);if(c)c.style.display=state[sk]?'block':'none'}render()})}
+    bindTog('strokeToggle','strokeControls','stroke');bindTog('shadowToggle','shadowControls','shadow');
+    bindTog('bgToggle','bgControls','bg');bindTog('curveToggle','curveControls','curve');
+    bindTog('charBgToggle','charBgControls','charBg');bindTog('neonToggle','neonControls','neon');
+    bindTog('gradToggle','gradControls','gradient');
+
+    // Style buttons
+    function bindSty(id,k){var el=document.getElementById(id);if(!el)return;el.addEventListener('click',function(){saveHistory();state[k]=!state[k];el.classList.toggle('active',state[k]);render()})}
+    bindSty('boldBtn','bold');bindSty('italicBtn','italic');bindSty('underlineBtn','underline');
+    bindSty('strikeBtn','strike');bindSty('flipHBtn','flipH');bindSty('flipVBtn','flipV');
+
+    // Layout
+    var hb=document.getElementById('horizBtn'),vb=document.getElementById('vertBtn');
+    if(hb)hb.addEventListener('click',function(){saveHistory();state.vertical=false;hb.classList.add('active');vb.classList.remove('active');render()});
+    if(vb)vb.addEventListener('click',function(){saveHistory();state.vertical=true;vb.classList.add('active');hb.classList.remove('active');render()});
+
+    // Curve direction
+    var cu=document.getElementById('curveUpBtn'),cd=document.getElementById('curveDownBtn');
+    if(cu)cu.addEventListener('click',function(){saveHistory();state.curveDown=false;cu.classList.add('active');cd.classList.remove('active');render()});
+    if(cd)cd.addEventListener('click',function(){saveHistory();state.curveDown=true;cd.classList.add('active');cu.classList.remove('active');render()});
+
+    // Char bg shape
+    var cbc=document.getElementById('charBgCircleBtn'),cbs=document.getElementById('charBgSquareBtn'),cbr=document.getElementById('charBgRoundBtn');
+    if(cbc)cbc.addEventListener('click',function(){saveHistory();state.charBgShape='circle';cbc.classList.add('active');cbs.classList.remove('active');if(cbr)cbr.classList.remove('active');render()});
+    if(cbs)cbs.addEventListener('click',function(){saveHistory();state.charBgShape='square';cbs.classList.add('active');cbc.classList.remove('active');if(cbr)cbr.classList.remove('active');render()});
+    if(cbr)cbr.addEventListener('click',function(){saveHistory();state.charBgShape='roundrect';cbr.classList.add('active');cbc.classList.remove('active');cbs.classList.remove('active');render()});
+
+    // Alignment
+    panelArea.querySelectorAll('[data-align]').forEach(function(b){b.addEventListener('click',function(){saveHistory();state.align=b.dataset.align;panelArea.querySelectorAll('[data-align]').forEach(function(x){x.classList.toggle('active',x.dataset.align===state.align)});render()})});
+
+    // Font panel
+    if(tool==='font')buildFontPanel();
+
+    // Template panel
+    if(tool==='tpl')buildTplPanel();
+
+    // Gradient preview
+    updateGradPreview();
+  }
+
+  function updateGradPreview(){
+    var el=document.getElementById('gradPreview');if(!el)return;
+    el.style.background='linear-gradient('+state.gradAngle+'deg,'+state.textColor+','+state.gradColor2+')';
+  }
+
+  // === FONT PANEL ===
+  var fontFilter='全部';
+  function buildFontPanel(){
+    // Tags
+    var tagsEl=document.getElementById('fontTags');
+    if(tagsEl){FONT_TAGS.forEach(function(tag){
+      var t=document.createElement('div');t.className='font-tag'+(tag===fontFilter?' active':'');t.textContent=tag;
+      t.addEventListener('click',function(){fontFilter=tag;buildFontPanel()});tagsEl.appendChild(t);
+    })}
+
+    // Recent fonts
+    var rfEl=document.getElementById('recentFontList');
+    if(rfEl&&recentFonts.length){recentFonts.forEach(function(id){
+      var f=BUILTIN_FONTS.find(function(x){return x.id===id});if(!f)return;
+      var c=document.createElement('div');c.className='chip'+(id===state.activeFont?' active':'');
+      c.textContent=f.name;c.style.fontFamily='"'+f.id+'",sans-serif';c.dataset.fontId=id;
+      c.addEventListener('click',function(){saveHistory();state.activeFont=id;addRecentFont(id);buildFontPanel();render()});
+      rfEl.appendChild(c);
+    })}
+
+    // Filtered built-in fonts
+    var bfl=document.getElementById('builtinFontList');
+    if(bfl){
+      var filtered=fontFilter==='全部'?BUILTIN_FONTS:BUILTIN_FONTS.filter(function(f){return f.tags.indexOf(fontFilter)!==-1});
+      filtered.forEach(function(f){
+        var c=document.createElement('div');c.className='chip'+(f.id===state.activeFont?' active':'');
+        c.textContent=f.name;c.style.fontFamily='"'+f.id+'",sans-serif';c.dataset.fontId=f.id;
+        c.addEventListener('click',function(){saveHistory();state.activeFont=f.id;addRecentFont(f.id);buildFontPanel();render()});
+        bfl.appendChild(c);
+      });
+    }
+
+    // Upload
+    var ua=document.getElementById('fontUploadArea');
+    if(ua)ua.addEventListener('click',function(){document.getElementById('fontFileInput').click()});
+    var fi=document.getElementById('fontFileInput');
+    if(fi)fi.addEventListener('change',function(e){
+      if(!e.target.files||!e.target.files.length)return;
+      Array.from(e.target.files).forEach(function(file){
+        var fn=file.name.replace(/\.(ttf|otf|woff2?)$/i,'');
+        var r=new FileReader();r.onload=function(ev){
+          try{var font=new FontFace(fn,ev.target.result);font.load().then(function(lf){
+            document.fonts.add(lf);if(state.fonts.indexOf(fn)===-1)state.fonts.push(fn);
+            state.activeFont=fn;buildFontPanel();render();
+          }).catch(function(err){alert('載入失敗: '+err.message)})}catch(err){alert('格式錯誤: '+err.message)}
+        };r.readAsArrayBuffer(file);
+      });e.target.value='';
+    });
+
+    // Custom fonts
+    var cl=document.getElementById('customFontList');
+    if(cl)state.fonts.forEach(function(n){
+      var c=document.createElement('div');c.className='chip'+(n===state.activeFont?' active':'');
+      c.textContent=n;c.style.fontFamily='"'+n+'",sans-serif';c.dataset.fontId=n;
+      c.addEventListener('click',function(){saveHistory();state.activeFont=n;render();buildFontPanel()});
+      cl.appendChild(c);
+    });
+  }
+
+  // === TEMPLATE PANEL ===
+  function buildTplPanel(){
+    var grid=document.getElementById('tplGrid');if(!grid)return;
+    TEMPLATES.forEach(function(tpl){
+      var card=document.createElement('div');card.className='tpl-card';
+      // Apply mini preview style
+      var s=tpl.style;
+      card.textContent=tpl.name;
+      card.style.color=s.textColor||'#fff';
+      if(s.stroke){card.style.webkitTextStroke=(s.strokeOutWidth||4)*.3+'px '+(s.strokeOutColor||'#000')}
+      if(s.neon){card.style.textShadow='0 0 8px '+(s.neonColor||'#818cf8')+',0 0 16px '+(s.neonColor||'#818cf8')}
+      if(s.shadow){card.style.textShadow='2px 2px 4px '+(s.shadowColor||'#000')}
+      if(s.bg){card.style.background=s.bgColor||'#000';card.style.borderColor=s.bgColor||'#000'}
+      if(s.gradient){card.style.background='linear-gradient('+(s.gradAngle||90)+'deg,'+(s.textColor||'#f87171')+','+(s.gradColor2||'#818cf8')+')';card.style.webkitBackgroundClip='text';card.style.webkitTextFillColor='transparent'}
+      if(s.charBg){card.style.background=s.charBgColor||'#FFD15B';card.style.borderColor=s.charBgColor||'#FFD15B';card.style.color=s.textColor||'#000'}
+      card.addEventListener('click',function(){
+        saveHistory();
+        Object.keys(s).forEach(function(k){state[k]=s[k]});
+        render();
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  // Header buttons
+  document.getElementById('undoBtn').addEventListener('click',doUndo);
+  document.getElementById('redoBtn').addEventListener('click',doRedo);
+  document.getElementById('resetBtn').addEventListener('click',function(){
+    saveHistory();var f=state.fonts;Object.keys(DEFAULTS).forEach(function(k){state[k]=DEFAULTS[k]});
+    state.fonts=f;document.getElementById('textInput').value=state.text;syncUI();render();
+  });
+
+  // Text input
+  document.getElementById('textInput').addEventListener('input',function(e){saveHistory();state.text=e.target.value;render()});
+
+  // Tap preview to focus
+  document.getElementById('previewArea').addEventListener('click',function(e){
+    if(e.target.tagName==='BUTTON'||e.target.classList.contains('rz-handle'))return;
+    document.getElementById('textInput').focus();
+  });
+
+  // === SAVE ===
+  document.getElementById('saveBtn').addEventListener('click',function(){
+    var canvas=document.getElementById('previewCanvas'),btn=document.getElementById('saveBtn');
+    canvas.toBlob(function(blob){
+      if(navigator.clipboard&&navigator.clipboard.write&&typeof ClipboardItem!=='undefined'){
+        try{navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){
+          btn.textContent='\u2713 已複製';setTimeout(function(){btn.textContent='儲存'},1500);
+        }).catch(function(){fallbackSave(blob)});return}catch(e){}
+      }
+      fallbackSave(blob);
+    },'image/png');
+  });
+  function fallbackSave(blob){
+    if(navigator.share&&navigator.canShare){
+      var file=new File([blob],'ig-sticker.png',{type:'image/png'});
+      if(navigator.canShare({files:[file]})){navigator.share({files:[file]}).catch(function(){});return}
+    }
+    var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ig-sticker-'+Date.now()+'.png';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url)},1000);
+  }
+
+  // === SYNC UI ===
+  function syncUI(){
+    document.getElementById('textInput').value=state.text;
+    if(activeTool)showPanel(activeTool);
+  }
+
+  // === RESIZE BOX ===
+  var resizeBox=document.getElementById('resizeBox');
+  function positionResizeBox(){
+    var canvas=document.getElementById('previewCanvas'),cR=canvas.getBoundingClientRect(),pR=document.getElementById('previewArea').getBoundingClientRect();
+    resizeBox.style.display='block';resizeBox.style.left=(cR.left-pR.left)+'px';resizeBox.style.top=(cR.top-pR.top)+'px';
+    resizeBox.style.width=cR.width+'px';resizeBox.style.height=cR.height+'px';
+  }
+  (function(){
+    var startX=0,startY=0,startSize=0,dragging=false,dir='';
+    function onStart(e){e.preventDefault();saveHistory();dragging=true;dir=this.dataset.dir;var t=e.touches?e.touches[0]:e;startX=t.clientX;startY=t.clientY;startSize=state.fontSize}
+    function onMove(e){if(!dragging)return;e.preventDefault();var t=e.touches?e.touches[0]:e,dx=t.clientX-startX,dy=startY-t.clientY,d=0;
+      if(dir==='br'||dir==='tr')d=(dx+dy)/2;else if(dir==='bl'||dir==='tl')d=(-dx+dy)/2;
+      else if(dir==='tc')d=dy;else if(dir==='bc')d=-dy;else if(dir==='mr')d=dx;else if(dir==='ml')d=-dx;
+      var nv=Math.max(12,Math.min(200,startSize+Math.round(d/2)));state.fontSize=nv;
+      var el=document.getElementById('fontSize');if(el){el.value=nv;setText('fontSizeVal',nv+'px')}render()}
+    function onEnd(){dragging=false}
+    document.querySelectorAll('.rz-handle').forEach(function(h){h.addEventListener('mousedown',onStart);h.addEventListener('touchstart',onStart,{passive:false})});
+    document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('mouseup',onEnd);document.addEventListener('touchend',onEnd);
+  })();
+
+  // === RENDER ===
+  function render(){
+    var canvas=document.getElementById('previewCanvas'),ctx=canvas.getContext('2d');
+    var text=state.text||' ',lines=text.split('\n');if(!lines.length)lines=[' '];
+    var fs=(state.italic?'italic ':'')+(state.bold?'bold ':'');
+    var ff='"'+state.activeFont+'",-apple-system,sans-serif';
+    var fz=state.fontSize*SCALE,lH=fz*(state.lineHeight/100),ls=state.letterSpacing*SCALE;
+    ctx.font=fs+fz+'px '+ff;
+
+    if(state.curve&&!state.vertical){renderCurved(canvas,ctx,lines,fs,ff,fz,ls);return}
+
+    var cW,cH;
+    if(state.vertical){
+      var mc=0;lines.forEach(function(l){if(l.length>mc)mc=l.length});
+      var cs=fz*(state.lineHeight/100);cW=cs*lines.length;cH=fz*mc+ls*Math.max(0,mc-1);
+    }else{
+      var mW=0,lw=[];lines.forEach(function(l){var w=measureLine(ctx,l,ls);lw.push(w);if(w>mW)mW=w});
+      cW=mW;cH=lH*lines.length;
+    }
+    var pad=state.bg?state.bgPadding*SCALE:0;
+    var sE=state.stroke?Math.max(state.strokeOutWidth,state.strokeInWidth)*SCALE:0;
+    var nE=state.neon?state.neonSize*SCALE:0;
+    var aR=state.shadowAngle*Math.PI/180,sDx=Math.cos(aR)*state.shadowDist,sDy=Math.sin(aR)*state.shadowDist;
+    var hE=state.shadow?(Math.max(Math.abs(sDx),Math.abs(sDy))+state.shadowBlur)*SCALE:0;
+    var cbE=state.charBg?(state.charBgSize/100-1)*state.fontSize*SCALE/2+5*SCALE:0;
+    sE=Math.max(sE,cbE,nE);var ex=sE+hE+5*SCALE;
+    var iW=cW+pad*2+ex*2,iH=cH+pad*2+ex*2;
+    var ang=state.rotation*Math.PI/180,cA=Math.abs(Math.cos(ang)),sA=Math.abs(Math.sin(ang));
+    var cw=Math.ceil(iW*cA+iH*sA)+4*SCALE,ch=Math.ceil(iW*sA+iH*cA)+4*SCALE;
+    canvas.width=cw;canvas.height=ch;
+    var dw=Math.min(cw/SCALE,340);canvas.style.width=dw+'px';canvas.style.height=(ch/SCALE)*(dw/(cw/SCALE))+'px';
+    ctx.clearRect(0,0,cw,ch);ctx.save();ctx.translate(cw/2,ch/2);ctx.rotate(ang);
+    if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
+    ctx.translate(-iW/2,-iH/2);
+    var ox=ex,oy=ex;
+    if(state.bg)drawBg(ctx,ox-pad,oy-pad,cW+pad*2,cH+pad*2);
+    ctx.font=fs+fz+'px '+ff;ctx.textBaseline='top';ctx.globalAlpha=state.textOpacity/100;
+
+    if(state.vertical){
+      var cs2=fz*(state.lineHeight/100);
+      lines.forEach(function(l,ci){var x=ox+cW-cs2*(ci+1)+(cs2-fz)/2;for(var i=0;i<l.length;i++){var cw2=ctx.measureText(l[i]).width;drawChar(ctx,l[i],x+(fz-cw2)/2,oy+i*(fz+ls),fz)}});
+    }else{
+      var lw2=[],mW2=0;lines.forEach(function(l){var w=measureLine(ctx,l,ls);lw2.push(w);if(w>mW2)mW2=w});
+      lines.forEach(function(l,i){
+        var y=oy+i*lH;
+        if(state.align==='justify'&&l.length>1){
+          var totalW=0;for(var j=0;j<l.length;j++)totalW+=ctx.measureText(l[j]).width;
+          var gap=(cW-totalW)/(l.length-1),cx2=ox;
+          for(var j2=0;j2<l.length;j2++){drawChar(ctx,l[j2],cx2,y,fz);cx2+=ctx.measureText(l[j2]).width+gap}
+        }else{
+          var x=ox;if(state.align==='center')x=ox+(cW-lw2[i])/2;else if(state.align==='right')x=ox+cW-lw2[i];
+          if(ls&&l.length>1){var cx3=x;for(var j3=0;j3<l.length;j3++){drawChar(ctx,l[j3],cx3,y,fz);cx3+=ctx.measureText(l[j3]).width+ls}}
+          else{drawChar(ctx,l,x,y,fz)}
+        }
+      });
+    }
+    ctx.globalAlpha=1;ctx.restore();requestAnimationFrame(positionResizeBox);
+  }
+
+  function measureLine(ctx,l,ls){var w=ctx.measureText(l).width;if(ls&&l.length>1)w+=ls*(l.length-1);return w}
+
+  function renderCurved(canvas,ctx,lines,fs,ff,fz,ls){
+    var line=lines.join(' '),radius=state.curveRadius*SCALE;ctx.font=fs+fz+'px '+ff;
+    var chars=[],tW=0;for(var i=0;i<line.length;i++){var w=ctx.measureText(line[i]).width;chars.push({ch:line[i],w:w});tW+=w+(i<line.length-1?ls:0)}
+    var tA=tW/radius;
+    var sE=state.stroke?Math.max(state.strokeOutWidth,state.strokeInWidth)*SCALE:0;
+    var nE=state.neon?state.neonSize*SCALE:0;
+    var aR2=state.shadowAngle*Math.PI/180;var hE=state.shadow?(Math.max(Math.abs(Math.cos(aR2)*state.shadowDist),Math.abs(Math.sin(aR2)*state.shadowDist))+state.shadowBlur)*SCALE:0;
+    var cbE2=state.charBg?(state.charBgSize/100-1)*fz/2:0;
+    var margin=Math.max(sE,cbE2,nE)+hE+fz+10*SCALE;
+    var sz=(radius+margin)*2,cw=Math.ceil(sz)+4*SCALE,ch=cw;
+    var ang=state.rotation*Math.PI/180,cA=Math.abs(Math.cos(ang)),sA=Math.abs(Math.sin(ang));
+    var fW=Math.ceil(cw*cA+ch*sA),fH=Math.ceil(cw*sA+ch*cA);
+    canvas.width=fW;canvas.height=fH;var dw=Math.min(fW/SCALE,340);canvas.style.width=dw+'px';canvas.style.height=(fH/SCALE)*(dw/(fW/SCALE))+'px';
+    ctx.clearRect(0,0,fW,fH);ctx.save();ctx.translate(fW/2,fH/2);ctx.rotate(ang);
+    if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
+    if(state.bg){var pad=state.bgPadding*SCALE,aO=radius+fz/2+pad,aI=radius-fz/2-pad,bA=tA+(pad*2)/radius,s1=-Math.PI/2-bA/2,e1=-Math.PI/2+bA/2,cy=state.curveDown?-radius:radius;
+      var aH=Math.round(state.bgOpacity*2.55).toString(16).padStart(2,'0');ctx.fillStyle=state.bgColor+aH;ctx.beginPath();
+      if(!state.curveDown){ctx.arc(0,cy,aO,Math.PI-e1,Math.PI-s1);ctx.arc(0,cy,aI,Math.PI-s1,Math.PI-e1,true)}else{ctx.arc(0,-cy,aO,s1,e1);ctx.arc(0,-cy,aI,e1,s1,true)}ctx.closePath();ctx.fill()}
+    ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.textAlign='center';ctx.globalAlpha=state.textOpacity/100;
+    var sa=-tA/2,ca=sa;
+    for(var j=0;j<chars.length;j++){var chA=chars[j].w/radius,ma=ca+chA/2;ctx.save();
+      if(!state.curveDown){ctx.rotate(Math.PI/2-ma);ctx.translate(0,radius);ctx.rotate(Math.PI)}else{ctx.rotate(-Math.PI/2+ma);ctx.translate(0,-radius)}
+      drawCharC(ctx,chars[j].ch,0,0,fz);ctx.restore();ca+=chA+ls/radius}
+    ctx.globalAlpha=1;ctx.restore();requestAnimationFrame(positionResizeBox);
+  }
+
+  function drawBg(ctx,x,y,w,h){
+    var r=state.bgRadius*SCALE,a=Math.round(state.bgOpacity*2.55).toString(16).padStart(2,'0');ctx.fillStyle=state.bgColor+a;ctx.beginPath();
+    if(ctx.roundRect){ctx.roundRect(x,y,w,h,r)}else{ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}ctx.fill()
+  }
+
+  function drawCBg(ctx,x,y,fz,cw){
+    if(!state.charBg)return;
+    var sz=fz*(state.charBgSize/100),pd=state.charBgPadding*SCALE,a=Math.round(state.charBgOpacity*2.55).toString(16).padStart(2,'0');
+    ctx.fillStyle=state.charBgColor+a;var cx=x+cw/2,cy=y+fz/2;
+    if(state.charBgShape==='circle'){ctx.beginPath();ctx.arc(cx,cy,(sz+pd)/2,0,Math.PI*2);ctx.fill()}
+    else if(state.charBgShape==='roundrect'){var rr=state.charBgRadius*SCALE,bw=sz+pd,bh=sz+pd;ctx.beginPath();
+      if(ctx.roundRect){ctx.roundRect(cx-bw/2,cy-bh/2,bw,bh,rr)}else{ctx.rect(cx-bw/2,cy-bh/2,bw,bh)}ctx.fill()}
+    else{ctx.fillRect(cx-(sz+pd)/2,cy-(sz+pd)/2,sz+pd,sz+pd)}
+  }
+
+  function getFill(ctx,x,y,fz){
+    if(state.gradient){var rad=state.gradAngle*Math.PI/180;var g=ctx.createLinearGradient(x-fz*Math.cos(rad),y-fz*Math.sin(rad),x+fz*Math.cos(rad),y+fz*Math.sin(rad));
+      g.addColorStop(0,state.textColor);g.addColorStop(1,state.gradColor2);return g}
+    return state.textColor;
+  }
+
+  function apSh(ctx){if(state.shadow){var a=state.shadowAngle*Math.PI/180,h=Math.round(state.shadowOpacity*2.55).toString(16).padStart(2,'0');
+    ctx.shadowColor=state.shadowColor+h;ctx.shadowBlur=state.shadowBlur*SCALE;ctx.shadowOffsetX=Math.cos(a)*state.shadowDist*SCALE;ctx.shadowOffsetY=Math.sin(a)*state.shadowDist*SCALE}}
+  function clSh(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0}
+
+  function apNeon(ctx,ch,x,y,fz,centered){
+    if(!state.neon)return;
+    var int=state.neonIntensity/100;
+    ctx.save();
+    ctx.shadowColor=state.neonColor;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+    // Multiple passes for glow
+    var sizes=[state.neonSize*SCALE,state.neonSize*SCALE*0.6,state.neonSize*SCALE*0.3];
+    sizes.forEach(function(s){
+      ctx.shadowBlur=s;ctx.globalAlpha=(state.textOpacity/100)*int*0.5;
+      ctx.fillStyle=state.neonColor;
+      if(centered){ctx.textAlign='center';ctx.textBaseline='middle'}
+      ctx.fillText(ch,x,y);
+    });
+    ctx.restore();
+  }
+
+  function drawChar(ctx,ch,x,y,fz){
+    var cw=ctx.measureText(ch).width;drawCBg(ctx,x,y,fz,cw);
+    apNeon(ctx,ch,x,y,fz,false);apSh(ctx);
+    if(state.stroke&&state.strokeOutWidth>0){ctx.strokeStyle=state.strokeOutColor;ctx.lineWidth=(state.strokeOutWidth*2+state.strokeInWidth*2)*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
+    if(state.stroke&&state.strokeInWidth>0){ctx.strokeStyle=state.strokeInColor;ctx.lineWidth=state.strokeInWidth*2*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
+    clSh(ctx);ctx.fillStyle=getFill(ctx,x,y,fz);ctx.fillText(ch,x,y);
+    if(state.underline)ctx.fillRect(x,y+fz*.9,cw,Math.max(2,fz*.05));
+    if(state.strike)ctx.fillRect(x,y+fz*.45,cw,Math.max(2,fz*.05));
+  }
+
+  function drawCharC(ctx,ch,x,y,fz){
+    var cw=ctx.measureText(ch).width;
+    if(state.charBg){var sz=fz*(state.charBgSize/100),pd=state.charBgPadding*SCALE,a=Math.round(state.charBgOpacity*2.55).toString(16).padStart(2,'0');
+      ctx.fillStyle=state.charBgColor+a;
+      if(state.charBgShape==='circle'){ctx.beginPath();ctx.arc(x,y,(sz+pd)/2,0,Math.PI*2);ctx.fill()}
+      else if(state.charBgShape==='roundrect'){var rr=state.charBgRadius*SCALE;ctx.beginPath();if(ctx.roundRect){ctx.roundRect(x-(sz+pd)/2,y-(sz+pd)/2,sz+pd,sz+pd,rr)}else{ctx.rect(x-(sz+pd)/2,y-(sz+pd)/2,sz+pd,sz+pd)}ctx.fill()}
+      else{ctx.fillRect(x-(sz+pd)/2,y-(sz+pd)/2,sz+pd,sz+pd)}}
+    apNeon(ctx,ch,x,y,fz,true);apSh(ctx);
+    if(state.stroke&&state.strokeOutWidth>0){ctx.strokeStyle=state.strokeOutColor;ctx.lineWidth=(state.strokeOutWidth*2+state.strokeInWidth*2)*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
+    if(state.stroke&&state.strokeInWidth>0){ctx.strokeStyle=state.strokeInColor;ctx.lineWidth=state.strokeInWidth*2*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
+    clSh(ctx);ctx.fillStyle=getFill(ctx,x,y,fz);ctx.fillText(ch,x,y);
+  }
+
+  // Preload fonts
+  var pl=document.createElement('div');pl.style.cssText='position:absolute;left:-9999px;font-size:12px';
+  BUILTIN_FONTS.forEach(function(f){var s=document.createElement('span');s.style.fontFamily='"'+f.id+'"';s.textContent='\u6e2c';pl.appendChild(s)});
+  document.body.appendChild(pl);
+  function onReady(){render()}
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(onReady);
+  setTimeout(onReady,1000);setTimeout(onReady,3000);setTimeout(onReady,6000);
+}// end initApp
+})();
+</script>
+</body>
+</html>
