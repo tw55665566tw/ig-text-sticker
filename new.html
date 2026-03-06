@@ -711,7 +711,7 @@ function initApp(){
       var cs=fz*(state.lineHeight/100);cW=cs*lines.length;cH=fz*mc+ls*Math.max(0,mc-1);
     }else{
       var mW=0,lw=[];lines.forEach(function(l){var w=measureLine(ctx,l,ls);lw.push(w);if(w>mW)mW=w});
-      cW=mW;cH=lH*lines.length;
+      cW=mW;cH=lines.length>1?(lines.length-1)*lH+fz:fz;
     }
     var pad=state.bg?state.bgPadding*SCALE:0;
     var sE=state.stroke?Math.max(state.strokeOutWidth,state.strokeInWidth)*SCALE:0;
