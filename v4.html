@@ -611,26 +611,28 @@ function initApp(){
   document.getElementById('saveBtn').addEventListener('click',function(){
     var canvas=document.getElementById('previewCanvas'),btn=document.getElementById('saveBtn');
     var origText=btn.textContent;
-    canvas.toBlob(function(blob){
-      // Try clipboard API first (works on iOS 16+)
-      if(navigator.clipboard&&navigator.clipboard.write&&typeof ClipboardItem!=='undefined'){
-        try{
-          navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){
-            btn.textContent='\u2713 已複製到剪貼簿';btn.style.background='#22c55e';
-            setTimeout(function(){btn.textContent=origText;btn.style.background=''},2000);
-          }).catch(function(){shareOrDownload(blob,btn,origText)});
-          return;
-        }catch(e){}
-      }
-      shareOrDownload(blob,btn,origText);
-    },'image/png');
+    // Must call clipboard.write SYNCHRONOUSLY in click handler for iOS
+    // Pass a Promise for the blob so user gesture context is preserved
+    if(navigator.clipboard&&navigator.clipboard.write&&typeof ClipboardItem!=='undefined'){
+      try{
+        var blobPromise=new Promise(function(resolve){canvas.toBlob(function(b){resolve(b)},'image/png')});
+        navigator.clipboard.write([new ClipboardItem({'image/png':blobPromise})]).then(function(){
+          btn.textContent='\u2713 已複製到剪貼簿';btn.style.background='#22c55e';
+          setTimeout(function(){btn.textContent=origText;btn.style.background=''},2000);
+        }).catch(function(){
+          canvas.toBlob(function(blob){shareOrDownload(blob,btn,origText)},'image/png');
+        });
+        return;
+      }catch(e){}
+    }
+    canvas.toBlob(function(blob){shareOrDownload(blob,btn,origText)},'image/png');
   });
   function shareOrDownload(blob,btn,origText){
     // Fallback: share sheet (iOS can "Copy" from share)
     if(navigator.share&&navigator.canShare){
       var file=new File([blob],'ig-sticker.png',{type:'image/png'});
       if(navigator.canShare({files:[file]})){
-        navigator.share({files:[file],title:'IG 文字貼紙'}).then(function(){
+        navigator.share({files:[file]}).then(function(){
           btn.textContent='\u2713 已分享';btn.style.background='#22c55e';
           setTimeout(function(){btn.textContent=origText;btn.style.background=''},2000);
         }).catch(function(){});return;
