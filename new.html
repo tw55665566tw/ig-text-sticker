@@ -731,14 +731,17 @@ function initApp(){
     var ox=ex+pad,oy=ex+pad;
     if(state.bg)drawBg(ctx,ex,ex,cW+pad*2,cH+pad*2);
     ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.globalAlpha=state.textOpacity/100;
+    // Measure actual glyph center offset from textBaseline='middle'
+    var vAdj=0;
+    try{var tm=ctx.measureText(lines[0]||'\u6e2c');if(tm.actualBoundingBoxAscent!==undefined)vAdj=(tm.actualBoundingBoxAscent-tm.actualBoundingBoxDescent)/2}catch(e){}
 
     if(state.vertical){
       var cs2=fz*(state.lineHeight/100);
-      lines.forEach(function(l,ci){var x=ox+cW-cs2*(ci+1)+(cs2-fz)/2;for(var i=0;i<l.length;i++){var cw2=ctx.measureText(l[i]).width;drawChar(ctx,l[i],x+(fz-cw2)/2,oy+i*(fz+ls)+fz/2,fz)}});
+      lines.forEach(function(l,ci){var x=ox+cW-cs2*(ci+1)+(cs2-fz)/2;for(var i=0;i<l.length;i++){var cw2=ctx.measureText(l[i]).width;drawChar(ctx,l[i],x+(fz-cw2)/2,oy+i*(fz+ls)+fz/2-vAdj,fz)}});
     }else{
       var lw2=[],mW2=0;lines.forEach(function(l){var w=measureLine(ctx,l,ls);lw2.push(w);if(w>mW2)mW2=w});
       lines.forEach(function(l,i){
-        var y=oy+i*lH+fz/2;
+        var y=oy+i*lH+fz/2-vAdj;
         if(state.align==='justify'&&l.length>1){
           var totalW=0;for(var j=0;j<l.length;j++)totalW+=ctx.measureText(l[j]).width;
           var gap=(cW-totalW)/(l.length-1),cx2=ox;
