@@ -272,12 +272,16 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
 
 <script>
 (function() {
-  // Password check
-  var PASS_HASH = '5f4dcc3b5aa765d61d8327deb882cf99a22133062';
-  function checkPwd() {
+  // Password check (SHA-256 hash, password not visible in source)
+  var PASS_HASH = 'e242af95d49d290521a2b0730473a1b7e053d4b244e0189876569943bef840d1';
+  async function sha256(str) {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+  }
+  async function checkPwd() {
     var input = document.getElementById('pwdInput').value;
-    // Simple hash comparison
-    if (input === 'a22133062') {
+    var hash = await sha256(input);
+    if (hash === PASS_HASH) {
       document.getElementById('lockScreen').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
       try { sessionStorage.setItem('ig-sticker-auth', '1'); } catch(e) {}
