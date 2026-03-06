@@ -728,8 +728,8 @@ function initApp(){
     ctx.clearRect(0,0,cw,ch);ctx.save();ctx.translate(cw/2,ch/2);ctx.rotate(ang);
     if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
     ctx.translate(-iW/2,-iH/2);
-    var ox=ex,oy=ex;
-    if(state.bg)drawBg(ctx,ox-pad,oy-pad,cW+pad*2,cH+pad*2);
+    var ox=ex+pad,oy=ex+pad;
+    if(state.bg)drawBg(ctx,ex,ex,cW+pad*2,cH+pad*2);
     ctx.font=fs+fz+'px '+ff;ctx.textBaseline='top';ctx.globalAlpha=state.textOpacity/100;
 
     if(state.vertical){
@@ -770,15 +770,30 @@ function initApp(){
     canvas.width=fW;canvas.height=fH;var dw=Math.min(fW/SCALE,340);canvas.style.width=dw+'px';canvas.style.height=(fH/SCALE)*(dw/(fW/SCALE))+'px';
     ctx.clearRect(0,0,fW,fH);ctx.save();ctx.translate(fW/2,fH/2);ctx.rotate(ang);
     if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
-    if(state.bg){var pad=state.bgPadding*SCALE,aO=radius+fz/2+pad,aI=radius-fz/2-pad,bA=tA+(pad*2)/radius,s1=-Math.PI/2-bA/2,e1=-Math.PI/2+bA/2;
+    if(state.bg){var pad=state.bgPadding*SCALE,aO=radius+fz/2+pad,aI=radius-fz/2-pad,bA=tA+(pad*2)/radius;
       ctx.fillStyle=hexToRgba(state.bgColor,state.bgOpacity);ctx.beginPath();
-      if(state.curveDown){var cy2=radius;ctx.arc(0,cy2,aO,Math.PI-e1,Math.PI-s1);ctx.arc(0,cy2,aI,Math.PI-s1,Math.PI-e1,true)}
-      else{ctx.arc(0,-radius,aO,s1,e1);ctx.arc(0,-radius,aI,e1,s1,true)}
+      if(!state.curveDown){
+        // Upward: arc center at (0, radius)
+        var bs=-bA/2,be=bA/2;
+        ctx.arc(0,radius,aO,-Math.PI/2+bs,-Math.PI/2+be);ctx.arc(0,radius,aI,-Math.PI/2+be,-Math.PI/2+bs,true);
+      }else{
+        // Downward: arc center at (0, -radius)
+        var bs2=-bA/2,be2=bA/2;
+        ctx.arc(0,-radius,aO,Math.PI/2+bs2,Math.PI/2+be2);ctx.arc(0,-radius,aI,Math.PI/2+be2,Math.PI/2+bs2,true);
+      }
       ctx.closePath();ctx.fill()}
     ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.textAlign='center';ctx.globalAlpha=state.textOpacity/100;
     var sa=-tA/2,ca=sa;
     for(var j=0;j<chars.length;j++){var chA=chars[j].w/radius,ma=ca+chA/2;ctx.save();
-      if(state.curveDown){ctx.rotate(Math.PI/2-ma);ctx.translate(0,radius);ctx.rotate(Math.PI)}else{ctx.rotate(-Math.PI/2+ma);ctx.translate(0,-radius)}
+      if(!state.curveDown){
+        // Upward curve (smile): center at (0, radius), chars on top
+        var px=radius*Math.sin(ma),py=radius-radius*Math.cos(ma);
+        ctx.translate(px,py);ctx.rotate(ma);
+      }else{
+        // Downward curve (frown): center at (0, -radius), chars on bottom
+        var px2=radius*Math.sin(ma),py2=-(radius-radius*Math.cos(ma));
+        ctx.translate(px2,py2);ctx.rotate(-ma);
+      }
       drawCharC(ctx,chars[j].ch,0,0,fz);ctx.restore();ca+=chA+ls/radius}
     ctx.globalAlpha=1;ctx.restore();requestAnimationFrame(positionResizeBox);
   }
