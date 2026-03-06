@@ -128,7 +128,7 @@ input[type="color"]{width:44px;height:40px;border:none;border-radius:8px;cursor:
   </div>
   <div class="hb-right">
     <button class="hb-btn danger" id="resetBtn">&#x27f3; 重置</button>
-    <button class="hb-btn save" id="saveBtn">儲存</button>
+    <button class="hb-btn save" id="saveBtn">複製貼上</button>
   </div>
 </div>
 
@@ -607,25 +607,40 @@ function initApp(){
     textInput.focus();
   });
 
-  // === SAVE ===
+  // === COPY TO CLIPBOARD ===
   document.getElementById('saveBtn').addEventListener('click',function(){
     var canvas=document.getElementById('previewCanvas'),btn=document.getElementById('saveBtn');
+    var origText=btn.textContent;
     canvas.toBlob(function(blob){
+      // Try clipboard API first (works on iOS 16+)
       if(navigator.clipboard&&navigator.clipboard.write&&typeof ClipboardItem!=='undefined'){
-        try{navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){
-          btn.textContent='\u2713 已複製';setTimeout(function(){btn.textContent='儲存'},1500);
-        }).catch(function(){fallbackSave(blob)});return}catch(e){}
+        try{
+          navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){
+            btn.textContent='\u2713 已複製到剪貼簿';btn.style.background='#22c55e';
+            setTimeout(function(){btn.textContent=origText;btn.style.background=''},2000);
+          }).catch(function(){shareOrDownload(blob,btn,origText)});
+          return;
+        }catch(e){}
       }
-      fallbackSave(blob);
+      shareOrDownload(blob,btn,origText);
     },'image/png');
   });
-  function fallbackSave(blob){
+  function shareOrDownload(blob,btn,origText){
+    // Fallback: share sheet (iOS can "Copy" from share)
     if(navigator.share&&navigator.canShare){
       var file=new File([blob],'ig-sticker.png',{type:'image/png'});
-      if(navigator.canShare({files:[file]})){navigator.share({files:[file]}).catch(function(){});return}
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:'IG 文字貼紙'}).then(function(){
+          btn.textContent='\u2713 已分享';btn.style.background='#22c55e';
+          setTimeout(function(){btn.textContent=origText;btn.style.background=''},2000);
+        }).catch(function(){});return;
+      }
     }
+    // Last resort: download
     var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ig-sticker-'+Date.now()+'.png';
     document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url)},1000);
+    btn.textContent='\u2713 已下載';btn.style.background='#22c55e';
+    setTimeout(function(){btn.textContent=origText;btn.style.background=''},2000);
   }
 
   // === SYNC UI ===
