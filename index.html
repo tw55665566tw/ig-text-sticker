@@ -26,7 +26,7 @@
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{height:100%;overflow:hidden;position:fixed;width:100%;top:0;left:0}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;color:#fff;height:100%;display:flex;flex-direction:column;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);touch-action:none;overscroll-behavior:none}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;color:#fff;height:100%;display:flex;flex-direction:column;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);overscroll-behavior:none}
 
 /* Header bar */
 #headerBar{flex-shrink:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#0d1117;border-bottom:1px solid #1e2a4a}
@@ -46,7 +46,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;
 .rz-handle.bl{bottom:-13px;left:-13px;cursor:nesw-resize}.rz-handle.br{bottom:-13px;right:-13px;cursor:nwse-resize}
 .rz-handle.tc{top:-13px;left:50%;margin-left:-13px;cursor:ns-resize}.rz-handle.bc{bottom:-13px;left:50%;margin-left:-13px;cursor:ns-resize}
 .rz-handle.ml{top:50%;margin-top:-13px;left:-13px;cursor:ew-resize}.rz-handle.mr{top:50%;margin-top:-13px;right:-13px;cursor:ew-resize}
-#textInput{position:absolute;background:transparent;border:none;color:transparent;caret-color:#818cf8;font-size:18px;resize:none;z-index:3;padding:8px;outline:none;text-align:center;overflow:hidden;pointer-events:auto;width:80%;height:60%;top:20%;left:10%}
+/* Text input area - separate from preview */
+#textInputWrap{flex-shrink:0;padding:6px 10px;background:#0d1117;border-bottom:1px solid #1e2a4a}
+#textInput{width:100%;background:#16213e;border:1px solid #334;border-radius:10px;color:#fff;font-size:17px;padding:10px 14px;resize:none;outline:none;line-height:1.5;min-height:52px;max-height:90px;overflow-y:auto;caret-color:#818cf8;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
 
 /* Tool bar */
 #toolBar{flex-shrink:0;display:flex;background:#0f1529;border-top:1px solid #1e2a4a;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 4px}
@@ -62,7 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;
 /* Controls */
 .ctrl{display:flex;align-items:center;gap:10px;margin-bottom:12px;min-height:40px}
 .ctrl-label{flex-shrink:0;width:56px;font-size:16px;color:#8899aa}
-input[type="range"]{flex:1;accent-color:#818cf8;height:10px}
+input[type="range"]{flex:1;accent-color:#818cf8;height:10px;touch-action:none}
 .ctrl-val{width:50px;text-align:right;font-size:15px;color:#818cf8;font-variant-numeric:tabular-nums}
 input[type="color"]{width:44px;height:40px;border:none;border-radius:8px;cursor:pointer;background:none}
 
@@ -131,10 +133,14 @@ input[type="color"]{width:44px;height:40px;border:none;border-radius:8px;cursor:
   </div>
 </div>
 
+<!-- Text Input -->
+<div id="textInputWrap">
+  <textarea id="textInput" rows="2" placeholder="點此輸入文字，Enter 換行...">水電維修找我們</textarea>
+</div>
+
 <!-- Preview -->
 <div id="previewArea">
   <canvas id="previewCanvas"></canvas>
-  <textarea id="textInput" placeholder="點此輸入文字，Enter 換行...">水電維修找我們</textarea>
   <div id="resizeBox">
     <div class="rz-drag" id="rzDrag"></div>
     <div class="rz-handle tl" data-dir="tl"></div><div class="rz-handle tc" data-dir="tc"></div><div class="rz-handle tr" data-dir="tr"></div>
@@ -172,6 +178,7 @@ input[type="color"]{width:44px;height:40px;border:none;border-radius:8px;cursor:
 document.addEventListener('touchmove',function(e){
   var t=e.target,allow=false;
   while(t&&t!==document.body){
+    if(t.tagName==='TEXTAREA'||t.tagName==='INPUT'||t.tagName==='SELECT'){allow=true;break}
     var s=window.getComputedStyle(t);
     if((s.overflowY==='auto'||s.overflowY==='scroll')&&t.scrollHeight>t.clientHeight){allow=true;break}
     if((s.overflowX==='auto'||s.overflowX==='scroll')&&t.scrollWidth>t.clientWidth){allow=true;break}
@@ -476,12 +483,27 @@ function initApp(){
 
   // === FONT PANEL ===
   var fontFilter='全部';
+  function updateFontActive(){
+    panelArea.querySelectorAll('.chip[data-font-id]').forEach(function(c){c.classList.toggle('active',c.dataset.fontId===state.activeFont)});
+  }
+  function selectFont(id){saveHistory();state.activeFont=id;addRecentFont(id);updateFontActive();render()}
   function buildFontPanel(){
     // Tags
     var tagsEl=document.getElementById('fontTags');
     if(tagsEl){FONT_TAGS.forEach(function(tag){
       var t=document.createElement('div');t.className='font-tag'+(tag===fontFilter?' active':'');t.textContent=tag;
-      t.addEventListener('click',function(){fontFilter=tag;buildFontPanel()});tagsEl.appendChild(t);
+      t.addEventListener('click',function(){fontFilter=tag;
+        // Only rebuild the font list, not the whole panel
+        var bfl=document.getElementById('builtinFontList');if(bfl){bfl.innerHTML='';
+          var filtered=fontFilter==='全部'?BUILTIN_FONTS:BUILTIN_FONTS.filter(function(f){return f.tags.indexOf(fontFilter)!==-1});
+          filtered.forEach(function(f){
+            var c=document.createElement('div');c.className='chip'+(f.id===state.activeFont?' active':'');
+            c.textContent=f.name;c.style.fontFamily='"'+f.id+'",sans-serif';c.dataset.fontId=f.id;
+            c.addEventListener('click',function(){selectFont(f.id)});bfl.appendChild(c);
+          });
+        }
+        tagsEl.querySelectorAll('.font-tag').forEach(function(x){x.classList.toggle('active',x.textContent===tag)});
+      });tagsEl.appendChild(t);
     })}
 
     // Recent fonts
@@ -490,8 +512,7 @@ function initApp(){
       var f=BUILTIN_FONTS.find(function(x){return x.id===id});if(!f)return;
       var c=document.createElement('div');c.className='chip'+(id===state.activeFont?' active':'');
       c.textContent=f.name;c.style.fontFamily='"'+f.id+'",sans-serif';c.dataset.fontId=id;
-      c.addEventListener('click',function(){saveHistory();state.activeFont=id;addRecentFont(id);buildFontPanel();render()});
-      rfEl.appendChild(c);
+      c.addEventListener('click',function(){selectFont(id)});rfEl.appendChild(c);
     })}
 
     // Filtered built-in fonts
@@ -501,8 +522,7 @@ function initApp(){
       filtered.forEach(function(f){
         var c=document.createElement('div');c.className='chip'+(f.id===state.activeFont?' active':'');
         c.textContent=f.name;c.style.fontFamily='"'+f.id+'",sans-serif';c.dataset.fontId=f.id;
-        c.addEventListener('click',function(){saveHistory();state.activeFont=f.id;addRecentFont(f.id);buildFontPanel();render()});
-        bfl.appendChild(c);
+        c.addEventListener('click',function(){selectFont(f.id)});bfl.appendChild(c);
       });
     }
 
@@ -517,7 +537,7 @@ function initApp(){
         var r=new FileReader();r.onload=function(ev){
           try{var font=new FontFace(fn,ev.target.result);font.load().then(function(lf){
             document.fonts.add(lf);if(state.fonts.indexOf(fn)===-1)state.fonts.push(fn);
-            state.activeFont=fn;buildFontPanel();render();
+            state.activeFont=fn;showPanel('font');render();
           }).catch(function(err){alert('載入失敗: '+err.message)})}catch(err){alert('格式錯誤: '+err.message)}
         };r.readAsArrayBuffer(file);
       });e.target.value='';
@@ -528,8 +548,7 @@ function initApp(){
     if(cl)state.fonts.forEach(function(n){
       var c=document.createElement('div');c.className='chip'+(n===state.activeFont?' active':'');
       c.textContent=n;c.style.fontFamily='"'+n+'",sans-serif';c.dataset.fontId=n;
-      c.addEventListener('click',function(){saveHistory();state.activeFont=n;render();buildFontPanel()});
-      cl.appendChild(c);
+      c.addEventListener('click',function(){selectFont(n)});cl.appendChild(c);
     });
   }
 
@@ -568,11 +587,9 @@ function initApp(){
   // Text input
   document.getElementById('textInput').addEventListener('input',function(e){saveHistory();state.text=e.target.value;render()});
 
-  // Tap preview to focus
-  document.getElementById('previewArea').addEventListener('click',function(e){
-    if(e.target.tagName==='BUTTON'||e.target.classList.contains('rz-handle'))return;
-    document.getElementById('textInput').focus();
-  });
+  // Auto-resize textarea
+  var textInput=document.getElementById('textInput');
+  textInput.addEventListener('input',function(){this.style.height='52px';this.style.height=Math.min(this.scrollHeight,90)+'px'});
 
   // === SAVE ===
   document.getElementById('saveBtn').addEventListener('click',function(){
