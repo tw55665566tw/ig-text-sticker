@@ -30,6 +30,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;
 .rz-handle.tr{top:-9px;right:-9px;cursor:nesw-resize}
 .rz-handle.bl{bottom:-9px;left:-9px;cursor:nesw-resize}
 .rz-handle.br{bottom:-9px;right:-9px;cursor:nwse-resize}
+.rz-handle.tc{top:-9px;left:50%;margin-left:-9px;cursor:ns-resize}
+.rz-handle.bc{bottom:-9px;left:50%;margin-left:-9px;cursor:ns-resize}
+.rz-handle.ml{top:50%;margin-top:-9px;left:-9px;cursor:ew-resize}
+.rz-handle.mr{top:50%;margin-top:-9px;right:-9px;cursor:ew-resize}
+/* Overlay textarea in preview */
+#textInput{position:absolute;background:transparent;border:none;color:transparent;caret-color:#818cf8;font-size:18px;resize:none;z-index:3;padding:8px;outline:none;text-align:center;overflow:hidden;pointer-events:auto;width:80%;height:60%;top:20%;left:10%}
 
 /* Tab bar */
 #tabBar{flex-shrink:0;display:flex;background:#0f1529;border-top:1px solid #1e2a4a;border-bottom:1px solid #1e2a4a;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -48,8 +54,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;
 input[type="range"]{flex:1;accent-color:#818cf8;height:5px}
 .ctrl-val{width:42px;text-align:right;font-size:12px;color:#818cf8;font-variant-numeric:tabular-nums}
 input[type="color"]{width:36px;height:30px;border:none;border-radius:6px;cursor:pointer;background:none}
-textarea{width:100%;background:#1a1a2e;border:1px solid #334;border-radius:8px;color:#fff;font-size:15px;padding:10px;resize:none;height:70px}
-textarea:focus{outline:none;border-color:#818cf8}
+textarea.panel-ta{width:100%;background:#1a1a2e;border:1px solid #334;border-radius:8px;color:#fff;font-size:15px;padding:10px;resize:none;height:70px}
+textarea.panel-ta:focus{outline:none;border-color:#818cf8}
 
 /* Chips & buttons */
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
@@ -93,17 +99,18 @@ textarea:focus{outline:none;border-color:#818cf8}
 <!-- Preview Area (Top) -->
 <div id="previewArea">
   <canvas id="previewCanvas"></canvas>
+  <textarea id="textInput" placeholder="點此輸入文字，Enter 換行...">水電維修找我們</textarea>
   <div id="resizeBox">
     <div class="rz-handle tl" data-dir="tl"></div>
+    <div class="rz-handle tc" data-dir="tc"></div>
     <div class="rz-handle tr" data-dir="tr"></div>
+    <div class="rz-handle ml" data-dir="ml"></div>
+    <div class="rz-handle mr" data-dir="mr"></div>
     <div class="rz-handle bl" data-dir="bl"></div>
+    <div class="rz-handle bc" data-dir="bc"></div>
     <div class="rz-handle br" data-dir="br"></div>
   </div>
   <button id="saveBtn">儲存</button>
-</div>
-<!-- Text Input (always visible below preview) -->
-<div style="flex-shrink:0;padding:6px 12px;background:#0d1117">
-  <textarea id="textInput" placeholder="輸入文字，Enter 換行...">水電維修找我們</textarea>
 </div>
 
 <!-- Action Bar -->
@@ -527,6 +534,12 @@ textarea:focus{outline:none;border-color:#818cf8}
     clSh(ctx);ctx.fillStyle=state.textColor;ctx.fillText(ch,x,y);
   }
 
+  // Tap preview to focus text input
+  document.getElementById('previewArea').addEventListener('click',function(e){
+    if(e.target.tagName==='BUTTON'||e.target.classList.contains('rz-handle'))return;
+    document.getElementById('textInput').focus();
+  });
+
   // === RESIZE BOX ===
   var resizeBox=document.getElementById('resizeBox');
   function positionResizeBox(){
@@ -541,18 +554,26 @@ textarea:focus{outline:none;border-color:#818cf8}
     resizeBox.style.height=cRect.height+'px';
   }
 
-  // Drag to resize = change fontSize
+  // Drag handles to resize fontSize
   (function(){
-    var startY=0,startSize=0,dragging=false;
+    var startX=0,startY=0,startSize=0,dragging=false,dir='';
     function onStart(e){
-      e.preventDefault();dragging=true;
-      var t=e.touches?e.touches[0]:e;startY=t.clientY;startSize=state.fontSize;
+      e.preventDefault();saveHistory();dragging=true;dir=this.dataset.dir;
+      var t=e.touches?e.touches[0]:e;startX=t.clientX;startY=t.clientY;startSize=state.fontSize;
     }
     function onMove(e){
       if(!dragging)return;e.preventDefault();
       var t=e.touches?e.touches[0]:e;
-      var dy=startY-t.clientY;
-      var nv=Math.max(12,Math.min(200,startSize+Math.round(dy/2)));
+      var dx=t.clientX-startX,dy=startY-t.clientY,delta=0;
+      // Corner handles: use diagonal distance
+      if(dir==='br'||dir==='tr')delta=(dx+dy)/2;
+      else if(dir==='bl'||dir==='tl')delta=(-dx+dy)/2;
+      // Edge handles: use single axis
+      else if(dir==='tc')delta=dy;
+      else if(dir==='bc')delta=-dy;
+      else if(dir==='mr')delta=dx;
+      else if(dir==='ml')delta=-dx;
+      var nv=Math.max(12,Math.min(200,startSize+Math.round(delta/2)));
       state.fontSize=nv;document.getElementById('fontSize').value=nv;setText('fontSizeVal',nv+'px');render();
     }
     function onEnd(){dragging=false}
