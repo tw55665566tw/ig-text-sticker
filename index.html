@@ -143,6 +143,7 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
       <button class="btn-sm" id="boldBtn"><b>粗體</b></button>
       <button class="btn-sm" id="italicBtn"><i>斜體</i></button>
       <button class="btn-sm" id="underlineBtn"><u>底線</u></button>
+      <button class="btn-sm" id="strikeBtn"><s>刪除線</s></button>
     </div>
   </div>
   <div class="control-row">
@@ -177,23 +178,34 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   </div>
 </div>
 
-<!-- Stroke -->
+<!-- Stroke (Double Outline) -->
 <div class="section">
-  <div class="section-title">描邊</div>
+  <div class="section-title">描邊（雙層）</div>
   <div class="toggle-row">
     <label>啟用描邊</label>
     <div class="toggle" id="strokeToggle"></div>
   </div>
   <div id="strokeControls" style="display:none;">
+    <div class="font-section-label">外描邊</div>
     <div class="control-row">
       <label>粗細</label>
-      <input type="range" id="strokeWidth" min="1" max="20" value="4">
-      <span class="range-value" id="strokeWidthVal">4px</span>
+      <input type="range" id="strokeOutWidth" min="0" max="30" value="6">
+      <span class="range-value" id="strokeOutWidthVal">6px</span>
     </div>
     <div class="control-row">
-      <label>描邊色</label>
-      <input type="color" id="strokeColor" value="#000000">
-      <div class="color-presets" id="strokeColorPresets"></div>
+      <label>外描邊色</label>
+      <input type="color" id="strokeOutColor" value="#000000">
+      <div class="color-presets" id="strokeOutColorPresets"></div>
+    </div>
+    <div class="font-section-label">內描邊</div>
+    <div class="control-row">
+      <label>粗細</label>
+      <input type="range" id="strokeInWidth" min="0" max="20" value="0">
+      <span class="range-value" id="strokeInWidthVal">0px</span>
+    </div>
+    <div class="control-row">
+      <label>內描邊色</label>
+      <input type="color" id="strokeInColor" value="#ffffff">
     </div>
   </div>
 </div>
@@ -207,23 +219,61 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   </div>
   <div id="shadowControls" style="display:none;">
     <div class="control-row">
+      <label>角度</label>
+      <input type="range" id="shadowAngle" min="0" max="360" value="45">
+      <span class="range-value" id="shadowAngleVal">45°</span>
+    </div>
+    <div class="control-row">
+      <label>距離</label>
+      <input type="range" id="shadowDist" min="0" max="30" value="4">
+      <span class="range-value" id="shadowDistVal">4px</span>
+    </div>
+    <div class="control-row">
       <label>模糊</label>
       <input type="range" id="shadowBlur" min="0" max="30" value="6">
       <span class="range-value" id="shadowBlurVal">6px</span>
     </div>
     <div class="control-row">
-      <label>偏移X</label>
-      <input type="range" id="shadowX" min="-20" max="20" value="2">
-      <span class="range-value" id="shadowXVal">2px</span>
-    </div>
-    <div class="control-row">
-      <label>偏移Y</label>
-      <input type="range" id="shadowY" min="-20" max="20" value="2">
-      <span class="range-value" id="shadowYVal">2px</span>
+      <label>透明度</label>
+      <input type="range" id="shadowOpacity" min="0" max="100" value="80">
+      <span class="range-value" id="shadowOpacityVal">80%</span>
     </div>
     <div class="control-row">
       <label>陰影色</label>
       <input type="color" id="shadowColor" value="#000000">
+    </div>
+  </div>
+</div>
+
+<!-- Per-character Background -->
+<div class="section">
+  <div class="section-title">逐字背景</div>
+  <div class="toggle-row">
+    <label>啟用逐字背景</label>
+    <div class="toggle" id="charBgToggle"></div>
+  </div>
+  <div id="charBgControls" style="display:none;">
+    <div class="control-row">
+      <label>形狀</label>
+      <div class="btn-row">
+        <button class="btn-sm active" id="charBgCircleBtn">圓形</button>
+        <button class="btn-sm" id="charBgSquareBtn">方形</button>
+      </div>
+    </div>
+    <div class="control-row">
+      <label>大小</label>
+      <input type="range" id="charBgSize" min="80" max="200" value="130">
+      <span class="range-value" id="charBgSizeVal">130%</span>
+    </div>
+    <div class="control-row">
+      <label>背景色</label>
+      <input type="color" id="charBgColor" value="#FFD15B">
+      <div class="color-presets" id="charBgColorPresets"></div>
+    </div>
+    <div class="control-row">
+      <label>透明度</label>
+      <input type="range" id="charBgOpacity" min="0" max="100" value="100">
+      <span class="range-value" id="charBgOpacityVal">100%</span>
     </div>
   </div>
 </div>
@@ -333,19 +383,28 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     bold: false,
     italic: false,
     underline: false,
+    strike: false,
     flipH: false,
     flipV: false,
     curve: false,
     curveRadius: 300,
     curveDown: false,
     stroke: false,
-    strokeWidth: 4,
-    strokeColor: '#000000',
+    strokeOutWidth: 6,
+    strokeOutColor: '#000000',
+    strokeInWidth: 0,
+    strokeInColor: '#ffffff',
     shadow: false,
+    shadowAngle: 45,
+    shadowDist: 4,
     shadowBlur: 6,
-    shadowX: 2,
-    shadowY: 2,
+    shadowOpacity: 80,
     shadowColor: '#000000',
+    charBg: false,
+    charBgShape: 'circle',
+    charBgSize: 130,
+    charBgColor: '#FFD15B',
+    charBgOpacity: 100,
     bg: false,
     bgColor: '#000000',
     bgOpacity: 70,
@@ -372,7 +431,8 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     });
   }
   initColorPresets('textColorPresets', 'textColor');
-  initColorPresets('strokeColorPresets', 'strokeColor');
+  initColorPresets('strokeOutColorPresets', 'strokeOutColor');
+  initColorPresets('charBgColorPresets', 'charBgColor');
 
   // Render built-in font list
   var builtinList = document.getElementById('builtinFontList');
@@ -464,6 +524,21 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   bindToggle('shadowToggle', 'shadowControls', 'shadow');
   bindToggle('bgToggle', 'bgControls', 'bg');
   bindToggle('curveToggle', 'curveControls', 'curve');
+  bindToggle('charBgToggle', 'charBgControls', 'charBg');
+
+  // Char bg shape
+  document.getElementById('charBgCircleBtn').addEventListener('click', function() {
+    state.charBgShape = 'circle';
+    document.getElementById('charBgCircleBtn').classList.add('active');
+    document.getElementById('charBgSquareBtn').classList.remove('active');
+    render();
+  });
+  document.getElementById('charBgSquareBtn').addEventListener('click', function() {
+    state.charBgShape = 'square';
+    document.getElementById('charBgSquareBtn').classList.add('active');
+    document.getElementById('charBgCircleBtn').classList.remove('active');
+    render();
+  });
 
   // Style buttons
   function bindStyleBtn(id, key) {
@@ -476,6 +551,7 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   bindStyleBtn('boldBtn', 'bold');
   bindStyleBtn('italicBtn', 'italic');
   bindStyleBtn('underlineBtn', 'underline');
+  bindStyleBtn('strikeBtn', 'strike');
   bindStyleBtn('flipHBtn', 'flipH');
   bindStyleBtn('flipVBtn', 'flipV');
 
@@ -522,8 +598,10 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   [
     ['fontSize','fontSize','px'],['lineHeight','lineHeight','%'],['letterSpacing','letterSpacing','px'],
     ['textOpacity','textOpacity','%'],['rotation','rotation','\u00b0'],['curveRadius','curveRadius',''],
-    ['strokeWidth','strokeWidth','px'],['shadowBlur','shadowBlur','px'],['shadowX','shadowX','px'],
-    ['shadowY','shadowY','px'],['bgOpacity','bgOpacity','%'],['bgRadius','bgRadius','px'],['bgPadding','bgPadding','px']
+    ['strokeOutWidth','strokeOutWidth','px'],['strokeInWidth','strokeInWidth','px'],
+    ['shadowAngle','shadowAngle','\u00b0'],['shadowDist','shadowDist','px'],['shadowBlur','shadowBlur','px'],['shadowOpacity','shadowOpacity','%'],
+    ['charBgSize','charBgSize','%'],['charBgOpacity','charBgOpacity','%'],
+    ['bgOpacity','bgOpacity','%'],['bgRadius','bgRadius','px'],['bgPadding','bgPadding','px']
   ].forEach(function(cfg) {
     var el = document.getElementById(cfg[0]);
     if (!el) return;
@@ -535,7 +613,7 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   });
 
   // Color inputs
-  ['textColor','strokeColor','shadowColor','bgColor'].forEach(function(id) {
+  ['textColor','strokeOutColor','strokeInColor','shadowColor','charBgColor','bgColor'].forEach(function(id) {
     document.getElementById(id).addEventListener('input', function(e) {
       state[id] = e.target.value;
       render();
@@ -591,8 +669,13 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     }
 
     var pad = state.bg ? state.bgPadding * SCALE : 0;
-    var sEx = state.stroke ? state.strokeWidth * SCALE : 0;
-    var shEx = state.shadow ? (Math.max(Math.abs(state.shadowX), Math.abs(state.shadowY)) + state.shadowBlur) * SCALE : 0;
+    var sEx = state.stroke ? Math.max(state.strokeOutWidth, state.strokeInWidth) * SCALE : 0;
+    var shAngleRad = state.shadowAngle * Math.PI / 180;
+    var shDx = Math.cos(shAngleRad) * state.shadowDist;
+    var shDy = Math.sin(shAngleRad) * state.shadowDist;
+    var shEx = state.shadow ? (Math.max(Math.abs(shDx), Math.abs(shDy)) + state.shadowBlur) * SCALE : 0;
+    var charBgEx = state.charBg ? (state.charBgSize / 100 - 1) * state.fontSize * SCALE / 2 + 5 * SCALE : 0;
+    sEx = Math.max(sEx, charBgEx);
     var extra = sEx + shEx + 5 * SCALE;
     var innerW = contentW + pad * 2 + extra * 2;
     var innerH = contentH + pad * 2 + extra * 2;
@@ -679,9 +762,13 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     }
 
     var totalAngle = totalW / radius;
-    var sEx = state.stroke ? state.strokeWidth * SCALE : 0;
-    var shEx = state.shadow ? (Math.max(Math.abs(state.shadowX), Math.abs(state.shadowY)) + state.shadowBlur) * SCALE : 0;
-    var margin = sEx + shEx + fontSize + 10 * SCALE;
+    var sEx = state.stroke ? Math.max(state.strokeOutWidth, state.strokeInWidth) * SCALE : 0;
+    var shAngleRad2 = state.shadowAngle * Math.PI / 180;
+    var shDx2 = Math.cos(shAngleRad2) * state.shadowDist;
+    var shDy2 = Math.sin(shAngleRad2) * state.shadowDist;
+    var shEx = state.shadow ? (Math.max(Math.abs(shDx2), Math.abs(shDy2)) + state.shadowBlur) * SCALE : 0;
+    var charBgEx2 = state.charBg ? (state.charBgSize / 100 - 1) * fontSize / 2 : 0;
+    var margin = Math.max(sEx, charBgEx2) + shEx + fontSize + 10 * SCALE;
 
     var size = (radius + margin) * 2;
     var cw = Math.ceil(size) + 4 * SCALE;
@@ -783,42 +870,81 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     ctx.fill();
   }
 
+  function drawCharBg(ctx, x, y, fontSize, charW) {
+    if (!state.charBg) return;
+    var size = fontSize * (state.charBgSize / 100);
+    var alphaHex = Math.round(state.charBgOpacity * 2.55).toString(16).padStart(2, '0');
+    ctx.fillStyle = state.charBgColor + alphaHex;
+    var cx = x + charW / 2;
+    var cy = y + fontSize / 2;
+    if (state.charBgShape === 'circle') {
+      ctx.beginPath();
+      ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(cx - size / 2, cy - size / 2, size, size);
+    }
+  }
+
   function drawChar(ctx, char, x, y, fontSize) {
+    var charW = ctx.measureText(char).width;
+    drawCharBg(ctx, x, y, fontSize, charW);
     applyShadow(ctx);
-    if (state.stroke) {
-      ctx.strokeStyle = state.strokeColor;
-      ctx.lineWidth = state.strokeWidth * SCALE;
+    // Outer stroke (drawn first, thicker)
+    if (state.stroke && state.strokeOutWidth > 0) {
+      ctx.strokeStyle = state.strokeOutColor;
+      ctx.lineWidth = (state.strokeOutWidth * 2 + state.strokeInWidth * 2) * SCALE;
       ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.strokeText(char, x, y);
     }
-    ctx.fillStyle = state.textColor;
-    ctx.fillText(char, x, y);
-    if (state.underline) {
-      var w = ctx.measureText(char).width;
-      ctx.fillRect(x, y + fontSize * 0.9, w, Math.max(2, fontSize * 0.05));
+    // Inner stroke
+    if (state.stroke && state.strokeInWidth > 0) {
+      ctx.strokeStyle = state.strokeInColor;
+      ctx.lineWidth = state.strokeInWidth * 2 * SCALE;
+      ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+      ctx.strokeText(char, x, y);
     }
     clearShadow(ctx);
+    ctx.fillStyle = state.textColor;
+    ctx.fillText(char, x, y);
+    // Decorations
+    if (state.underline) {
+      ctx.fillRect(x, y + fontSize * 0.9, charW, Math.max(2, fontSize * 0.05));
+    }
+    if (state.strike) {
+      ctx.fillRect(x, y + fontSize * 0.45, charW, Math.max(2, fontSize * 0.05));
+    }
   }
 
   function drawCharCurved(ctx, char, x, y, fontSize) {
+    var charW = ctx.measureText(char).width;
+    drawCharBg(ctx, x - charW / 2, y - fontSize / 2, fontSize, charW);
     applyShadow(ctx);
-    if (state.stroke) {
-      ctx.strokeStyle = state.strokeColor;
-      ctx.lineWidth = state.strokeWidth * SCALE;
+    if (state.stroke && state.strokeOutWidth > 0) {
+      ctx.strokeStyle = state.strokeOutColor;
+      ctx.lineWidth = (state.strokeOutWidth * 2 + state.strokeInWidth * 2) * SCALE;
       ctx.lineJoin = 'round'; ctx.miterLimit = 2;
       ctx.strokeText(char, x, y);
     }
+    if (state.stroke && state.strokeInWidth > 0) {
+      ctx.strokeStyle = state.strokeInColor;
+      ctx.lineWidth = state.strokeInWidth * 2 * SCALE;
+      ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+      ctx.strokeText(char, x, y);
+    }
+    clearShadow(ctx);
     ctx.fillStyle = state.textColor;
     ctx.fillText(char, x, y);
-    clearShadow(ctx);
   }
 
   function applyShadow(ctx) {
     if (state.shadow) {
-      ctx.shadowColor = state.shadowColor;
+      var angleRad = state.shadowAngle * Math.PI / 180;
+      var alphaHex = Math.round(state.shadowOpacity * 2.55).toString(16).padStart(2, '0');
+      ctx.shadowColor = state.shadowColor + alphaHex;
       ctx.shadowBlur = state.shadowBlur * SCALE;
-      ctx.shadowOffsetX = state.shadowX * SCALE;
-      ctx.shadowOffsetY = state.shadowY * SCALE;
+      ctx.shadowOffsetX = Math.cos(angleRad) * state.shadowDist * SCALE;
+      ctx.shadowOffsetY = Math.sin(angleRad) * state.shadowDist * SCALE;
     }
   }
   function clearShadow(ctx) {
