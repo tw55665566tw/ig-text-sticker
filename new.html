@@ -244,7 +244,7 @@ function initApp(){
     shadow:false,shadowAngle:45,shadowDist:4,shadowBlur:6,shadowOpacity:80,shadowColor:'#000000',
     neon:false,neonColor:'#818cf8',neonSize:15,neonIntensity:80,
     charBg:false,charBgShape:'circle',charBgSize:130,charBgColor:'#FFD15B',charBgOpacity:100,charBgRadius:8,charBgPadding:4,
-    bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20,
+    bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20,bgOffsetY:0,
     posX:0,posY:0
   };
   var state=JSON.parse(JSON.stringify(DEFAULTS));state.fonts=[];
@@ -376,7 +376,7 @@ function initApp(){
       h='<div class="tog-row"><span style="font-size:14px">啟用背景框</span><div class="tog'+(state.bg?' on':'')+'" id="bgToggle"></div></div>';
       h+='<div id="bgControls" style="display:'+(state.bg?'block':'none')+'">';
       h+='<div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="bgColor" value="'+state.bgColor+'"></div>';
-      h+=mkRange('bgOpacity','透明度','%',0,100)+mkRange('bgRadius','圓角','px',0,40)+mkRange('bgPadding','內距','px',0,60);
+      h+=mkRange('bgOpacity','透明度','%',0,100)+mkRange('bgRadius','圓角','px',0,40)+mkRange('bgPadding','內距','px',0,60)+mkRange('bgOffsetY','上下微調','px',-30,30);
       h+='</div>';
       break;
     case 'curve':
@@ -412,7 +412,7 @@ function initApp(){
       var units={fontSize:'px',lineHeight:'%',letterSpacing:'px',textOpacity:'%',rotation:'\u00b0',
         strokeOutWidth:'px',strokeInWidth:'px',shadowAngle:'\u00b0',shadowDist:'px',shadowBlur:'px',shadowOpacity:'%',
         neonSize:'px',neonIntensity:'%',charBgSize:'%',charBgRadius:'px',charBgPadding:'px',charBgOpacity:'%',
-        bgOpacity:'%',bgRadius:'px',bgPadding:'px',curveRadius:'',gradAngle:'\u00b0'};
+        bgOpacity:'%',bgRadius:'px',bgPadding:'px',bgOffsetY:'px',curveRadius:'',gradAngle:'\u00b0'};
       e.addEventListener('input',function(){state[id]=parseInt(e.value);setText(id+'Val',e.value+(units[id]||''));render()});
       e.addEventListener('pointerdown',function(){saveHistory()});
     });
@@ -731,9 +731,10 @@ function initApp(){
     var ox=ex+pad,oy=ex+pad;
     if(state.bg)drawBg(ctx,ex,ex,cW+pad*2,cH+pad*2);
     ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.globalAlpha=state.textOpacity/100;
-    // Measure actual glyph center offset from textBaseline='middle'
+    // Measure actual glyph center offset + manual adjust
     var vAdj=0;
     try{var tm=ctx.measureText(lines[0]||'\u6e2c');if(tm.actualBoundingBoxAscent!==undefined)vAdj=(tm.actualBoundingBoxAscent-tm.actualBoundingBoxDescent)/2}catch(e){}
+    vAdj-=(state.bgOffsetY||0)*SCALE;
 
     if(state.vertical){
       var cs2=fz*(state.lineHeight/100);
