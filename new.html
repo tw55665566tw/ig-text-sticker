@@ -730,15 +730,15 @@ function initApp(){
     ctx.translate(-iW/2,-iH/2);
     var ox=ex+pad,oy=ex+pad;
     if(state.bg)drawBg(ctx,ex,ex,cW+pad*2,cH+pad*2);
-    ctx.font=fs+fz+'px '+ff;ctx.textBaseline='top';ctx.globalAlpha=state.textOpacity/100;
+    ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.globalAlpha=state.textOpacity/100;
 
     if(state.vertical){
       var cs2=fz*(state.lineHeight/100);
-      lines.forEach(function(l,ci){var x=ox+cW-cs2*(ci+1)+(cs2-fz)/2;for(var i=0;i<l.length;i++){var cw2=ctx.measureText(l[i]).width;drawChar(ctx,l[i],x+(fz-cw2)/2,oy+i*(fz+ls),fz)}});
+      lines.forEach(function(l,ci){var x=ox+cW-cs2*(ci+1)+(cs2-fz)/2;for(var i=0;i<l.length;i++){var cw2=ctx.measureText(l[i]).width;drawChar(ctx,l[i],x+(fz-cw2)/2,oy+i*(fz+ls)+fz/2,fz)}});
     }else{
       var lw2=[],mW2=0;lines.forEach(function(l){var w=measureLine(ctx,l,ls);lw2.push(w);if(w>mW2)mW2=w});
       lines.forEach(function(l,i){
-        var y=oy+i*lH;
+        var y=oy+i*lH+fz/2;
         if(state.align==='justify'&&l.length>1){
           var totalW=0;for(var j=0;j<l.length;j++)totalW+=ctx.measureText(l[j]).width;
           var gap=(cW-totalW)/(l.length-1),cx2=ox;
@@ -810,7 +810,7 @@ function initApp(){
   function drawCBg(ctx,x,y,fz,cw){
     if(!state.charBg)return;
     var sz=fz*(state.charBgSize/100),pd=state.charBgPadding*SCALE;
-    ctx.fillStyle=hexToRgba(state.charBgColor,state.charBgOpacity);var cx=x+cw/2,cy=y+fz/2;
+    ctx.fillStyle=hexToRgba(state.charBgColor,state.charBgOpacity);var cx=x+cw/2,cy=y;
     if(state.charBgShape==='circle'){ctx.beginPath();ctx.arc(cx,cy,(sz+pd)/2,0,Math.PI*2);ctx.fill()}
     else if(state.charBgShape==='roundrect'){var rr=state.charBgRadius*SCALE,bw=sz+pd,bh=sz+pd;ctx.beginPath();
       if(ctx.roundRect){ctx.roundRect(cx-bw/2,cy-bh/2,bw,bh,rr)}else{ctx.rect(cx-bw/2,cy-bh/2,bw,bh)}ctx.fill()}
@@ -844,13 +844,14 @@ function initApp(){
   }
 
   function drawChar(ctx,ch,x,y,fz){
+    // y is vertical CENTER of the character (textBaseline='middle')
     var cw=ctx.measureText(ch).width;drawCBg(ctx,x,y,fz,cw);
     apNeon(ctx,ch,x,y,fz,false);apSh(ctx);
     if(state.stroke&&state.strokeOutWidth>0){ctx.strokeStyle=state.strokeOutColor;ctx.lineWidth=(state.strokeOutWidth*2+state.strokeInWidth*2)*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
     if(state.stroke&&state.strokeInWidth>0){ctx.strokeStyle=state.strokeInColor;ctx.lineWidth=state.strokeInWidth*2*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
     clSh(ctx);ctx.fillStyle=getFill(ctx,x,y,fz);ctx.fillText(ch,x,y);
-    if(state.underline)ctx.fillRect(x,y+fz*.9,cw,Math.max(2,fz*.05));
-    if(state.strike)ctx.fillRect(x,y+fz*.45,cw,Math.max(2,fz*.05));
+    if(state.underline)ctx.fillRect(x,y+fz*0.4,cw,Math.max(2,fz*.05));
+    if(state.strike)ctx.fillRect(x,y,cw,Math.max(2,fz*.05));
   }
 
   function drawCharC(ctx,ch,x,y,fz){
