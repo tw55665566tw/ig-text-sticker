@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IG 文字貼紙產生器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; padding: 16px; padding-bottom: 120px; }
+h1 { font-size: 20px; text-align: center; margin-bottom: 16px; }
+.section { background: #16213e; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.section-title { font-size: 13px; color: #8899aa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+label { display: block; font-size: 14px; color: #ccc; margin-bottom: 6px; }
+.font-upload-area { border: 2px dashed #334; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+.font-upload-area:active { border-color: #667; }
+.font-upload-area.has-font { border-color: #4ade80; background: rgba(74,222,128,0.05); }
+#fontFileInput { display: none; }
+.font-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.font-chip { background: #1a1a2e; border: 1px solid #334; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.font-chip.active { border-color: #818cf8; background: rgba(129,140,248,0.15); color: #818cf8; }
+textarea { width: 100%; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #fff; font-size: 16px; padding: 10px; resize: vertical; min-height: 60px; }
+textarea:focus { outline: none; border-color: #818cf8; }
+.control-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.control-row label { margin: 0; flex-shrink: 0; width: 70px; font-size: 13px; }
+input[type="range"] { flex: 1; accent-color: #818cf8; height: 6px; }
+.range-value { width: 45px; text-align: right; font-size: 13px; color: #818cf8; font-variant-numeric: tabular-nums; }
+input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6px; cursor: pointer; background: none; }
+.color-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
+.color-dot.active { border-color: #fff; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.toggle { width: 44px; height: 24px; background: #334; border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; }
+.toggle.on { background: #818cf8; }
+.toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s; }
+.toggle.on::after { transform: translateX(20px); }
+#previewContainer { background: repeating-conic-gradient(#2a2a3e 0% 25%, #1e1e32 0% 50%) 0 0 / 20px 20px; border-radius: 12px; min-height: 200px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; padding: 20px; }
+#previewCanvas { max-width: 100%; }
+.export-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff; font-size: 17px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; margin-top: 12px; transition: transform 0.1s; }
+.export-btn:active { transform: scale(0.97); }
+.align-btns { display: flex; gap: 6px; }
+.align-btn { width: 36px; height: 36px; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #ccc; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.align-btn.active { border-color: #818cf8; color: #818cf8; }
+#savedImage { max-width: 100%; border-radius: 8px; margin-top: 12px; }
+.save-hint { text-align: center; font-size: 13px; color: #8899aa; margin-top: 8px; }
+.style-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.style-btn { padding: 6px 14px; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #ccc; font-size: 13px; cursor: pointer; }
+.style-btn.active { border-color: #818cf8; color: #818cf8; background: rgba(129,140,248,0.1); }
+</style>
+</head>
+<body>
+
+<h1>IG 文字貼紙產生器</h1>
+
+<!-- Font Upload -->
+<div class="section">
+  <div class="section-title">字體</div>
+  <div class="font-upload-area" id="fontUploadArea">
+    <div style="font-size:28px; margin-bottom:6px;">+</div>
+    <div style="font-size:14px; color:#8899aa;">點擊上傳字體檔 (TTF / OTF)</div>
+  </div>
+  <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" multiple>
+  <div class="font-list" id="fontList"></div>
+</div>
+
+<!-- Text Input -->
+<div class="section">
+  <div class="section-title">文字內容</div>
+  <textarea id="textInput" placeholder="輸入你要的文字...">水電維修找我們</textarea>
+</div>
+
+<!-- Style Controls -->
+<div class="section">
+  <div class="section-title">樣式設定</div>
+  <div class="control-row">
+    <label>大小</label>
+    <input type="range" id="fontSize" min="12" max="200" value="64">
+    <span class="range-value" id="fontSizeVal">64px</span>
+  </div>
+  <div class="control-row">
+    <label>行距</label>
+    <input type="range" id="lineHeight" min="80" max="250" value="130">
+    <span class="range-value" id="lineHeightVal">130%</span>
+  </div>
+  <div class="control-row">
+    <label>字距</label>
+    <input type="range" id="letterSpacing" min="-10" max="30" value="0">
+    <span class="range-value" id="letterSpacingVal">0px</span>
+  </div>
+  <div class="control-row">
+    <label>文字色</label>
+    <input type="color" id="textColor" value="#ffffff">
+    <div class="color-presets" id="textColorPresets"></div>
+  </div>
+  <div class="control-row">
+    <label>排列</label>
+    <div class="style-btns">
+      <button class="style-btn active" id="horizBtn">橫排</button>
+      <button class="style-btn" id="vertBtn">直排</button>
+    </div>
+  </div>
+  <div class="control-row">
+    <label>旋轉</label>
+    <input type="range" id="rotation" min="-180" max="180" value="0">
+    <span class="range-value" id="rotationVal">0°</span>
+  </div>
+  <div class="control-row">
+    <label>對齊</label>
+    <div class="align-btns">
+      <button class="align-btn active" data-align="center">中</button>
+      <button class="align-btn" data-align="left">左</button>
+      <button class="align-btn" data-align="right">右</button>
+    </div>
+  </div>
+  <div class="control-row">
+    <label>樣式</label>
+    <div class="style-btns">
+      <button class="style-btn" id="boldBtn"><b>粗體</b></button>
+      <button class="style-btn" id="italicBtn"><i>斜體</i></button>
+    </div>
+  </div>
+</div>
+
+<!-- Stroke -->
+<div class="section">
+  <div class="section-title">描邊</div>
+  <div class="toggle-row">
+    <label>啟用描邊</label>
+    <div class="toggle" id="strokeToggle"></div>
+  </div>
+  <div id="strokeControls" style="display:none;">
+    <div class="control-row">
+      <label>粗細</label>
+      <input type="range" id="strokeWidth" min="1" max="20" value="4">
+      <span class="range-value" id="strokeWidthVal">4px</span>
+    </div>
+    <div class="control-row">
+      <label>描邊色</label>
+      <input type="color" id="strokeColor" value="#000000">
+      <div class="color-presets" id="strokeColorPresets"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Shadow -->
+<div class="section">
+  <div class="section-title">陰影</div>
+  <div class="toggle-row">
+    <label>啟用陰影</label>
+    <div class="toggle" id="shadowToggle"></div>
+  </div>
+  <div id="shadowControls" style="display:none;">
+    <div class="control-row">
+      <label>模糊</label>
+      <input type="range" id="shadowBlur" min="0" max="30" value="6">
+      <span class="range-value" id="shadowBlurVal">6px</span>
+    </div>
+    <div class="control-row">
+      <label>偏移X</label>
+      <input type="range" id="shadowX" min="-20" max="20" value="2">
+      <span class="range-value" id="shadowXVal">2px</span>
+    </div>
+    <div class="control-row">
+      <label>偏移Y</label>
+      <input type="range" id="shadowY" min="-20" max="20" value="2">
+      <span class="range-value" id="shadowYVal">2px</span>
+    </div>
+    <div class="control-row">
+      <label>陰影色</label>
+      <input type="color" id="shadowColor" value="#000000">
+    </div>
+  </div>
+</div>
+
+<!-- Background Box -->
+<div class="section">
+  <div class="section-title">背景框</div>
+  <div class="toggle-row">
+    <label>啟用背景框</label>
+    <div class="toggle" id="bgToggle"></div>
+  </div>
+  <div id="bgControls" style="display:none;">
+    <div class="control-row">
+      <label>背景色</label>
+      <input type="color" id="bgColor" value="#000000">
+    </div>
+    <div class="control-row">
+      <label>透明度</label>
+      <input type="range" id="bgOpacity" min="0" max="100" value="70">
+      <span class="range-value" id="bgOpacityVal">70%</span>
+    </div>
+    <div class="control-row">
+      <label>圓角</label>
+      <input type="range" id="bgRadius" min="0" max="40" value="12">
+      <span class="range-value" id="bgRadiusVal">12px</span>
+    </div>
+    <div class="control-row">
+      <label>內距</label>
+      <input type="range" id="bgPadding" min="0" max="60" value="20">
+      <span class="range-value" id="bgPaddingVal">20px</span>
+    </div>
+  </div>
+</div>
+
+<!-- Preview -->
+<div class="section">
+  <div class="section-title">預覽（棋盤格 = 透明區域）</div>
+  <div id="previewContainer">
+    <canvas id="previewCanvas"></canvas>
+  </div>
+  <button class="export-btn" id="exportBtn">產生圖片（長按儲存到相簿）</button>
+  <div id="exportResult"></div>
+</div>
+
+<script>
+(function() {
+  // State
+  var state = {
+    fonts: [],
+    activeFont: '',
+    text: '水電維修找我們',
+    fontSize: 64,
+    lineHeight: 130,
+    letterSpacing: 0,
+    textColor: '#ffffff',
+    align: 'center',
+    vertical: false,
+    rotation: 0,
+    bold: false,
+    italic: false,
+    stroke: false,
+    strokeWidth: 4,
+    strokeColor: '#000000',
+    shadow: false,
+    shadowBlur: 6,
+    shadowX: 2,
+    shadowY: 2,
+    shadowColor: '#000000',
+    bg: false,
+    bgColor: '#000000',
+    bgOpacity: 70,
+    bgRadius: 12,
+    bgPadding: 20
+  };
+
+  var SCALE = 4; // 4x for crisp text on retina displays
+  var colorPresets = ['#ffffff','#000000','#f87171','#fb923c','#facc15','#4ade80','#38bdf8','#818cf8','#e879f9','#ff6b6b'];
+
+  // Safe DOM helpers
+  function setText(id, text) {
+    document.getElementById(id).textContent = text;
+  }
+
+  function initColorPresets(containerId, inputId) {
+    var container = document.getElementById(containerId);
+    colorPresets.forEach(function(c) {
+      var dot = document.createElement('div');
+      dot.className = 'color-dot';
+      dot.style.background = c;
+      dot.addEventListener('click', function() {
+        document.getElementById(inputId).value = c;
+        document.getElementById(inputId).dispatchEvent(new Event('input'));
+      });
+      container.appendChild(dot);
+    });
+  }
+  initColorPresets('textColorPresets', 'textColor');
+  initColorPresets('strokeColorPresets', 'strokeColor');
+
+  // Font upload
+  document.getElementById('fontUploadArea').addEventListener('click', function() {
+    document.getElementById('fontFileInput').click();
+  });
+
+  document.getElementById('fontFileInput').addEventListener('change', function(e) {
+    Array.from(e.target.files).forEach(function(file) {
+      var fontName = file.name.replace(/\.(ttf|otf|woff2?)$/i, '');
+      file.arrayBuffer().then(function(buf) {
+        var font = new FontFace(fontName, buf);
+        return font.load();
+      }).then(function(loadedFont) {
+        document.fonts.add(loadedFont);
+        state.fonts.push(fontName);
+        state.activeFont = fontName;
+        renderFontList();
+        render();
+      });
+    });
+    document.getElementById('fontUploadArea').classList.add('has-font');
+  });
+
+  function renderFontList() {
+    var list = document.getElementById('fontList');
+    while (list.firstChild) list.removeChild(list.firstChild);
+    state.fonts.forEach(function(name) {
+      var chip = document.createElement('div');
+      chip.className = 'font-chip' + (name === state.activeFont ? ' active' : '');
+      chip.textContent = name;
+
+      var removeBtn = document.createElement('span');
+      removeBtn.textContent = ' x';
+      removeBtn.style.color = '#f87171';
+      removeBtn.style.fontSize = '11px';
+      removeBtn.style.marginLeft = '6px';
+      removeBtn.style.cursor = 'pointer';
+      removeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        state.fonts = state.fonts.filter(function(f) { return f !== name; });
+        if (state.activeFont === name) state.activeFont = state.fonts[0] || '';
+        renderFontList();
+        render();
+      });
+      chip.appendChild(removeBtn);
+
+      chip.addEventListener('click', function() {
+        state.activeFont = name;
+        renderFontList();
+        render();
+      });
+      list.appendChild(chip);
+    });
+  }
+
+  // Toggles
+  document.getElementById('strokeToggle').addEventListener('click', function() {
+    state.stroke = !state.stroke;
+    this.classList.toggle('on', state.stroke);
+    document.getElementById('strokeControls').style.display = state.stroke ? 'block' : 'none';
+    render();
+  });
+  document.getElementById('shadowToggle').addEventListener('click', function() {
+    state.shadow = !state.shadow;
+    this.classList.toggle('on', state.shadow);
+    document.getElementById('shadowControls').style.display = state.shadow ? 'block' : 'none';
+    render();
+  });
+  document.getElementById('bgToggle').addEventListener('click', function() {
+    state.bg = !state.bg;
+    this.classList.toggle('on', state.bg);
+    document.getElementById('bgControls').style.display = state.bg ? 'block' : 'none';
+    render();
+  });
+
+  document.getElementById('boldBtn').addEventListener('click', function() {
+    state.bold = !state.bold;
+    this.classList.toggle('active', state.bold);
+    render();
+  });
+  document.getElementById('italicBtn').addEventListener('click', function() {
+    state.italic = !state.italic;
+    this.classList.toggle('active', state.italic);
+    render();
+  });
+
+  // Vertical / Horizontal
+  document.getElementById('horizBtn').addEventListener('click', function() {
+    state.vertical = false;
+    document.getElementById('horizBtn').classList.add('active');
+    document.getElementById('vertBtn').classList.remove('active');
+    render();
+  });
+  document.getElementById('vertBtn').addEventListener('click', function() {
+    state.vertical = true;
+    document.getElementById('vertBtn').classList.add('active');
+    document.getElementById('horizBtn').classList.remove('active');
+    render();
+  });
+
+  // Alignment
+  document.querySelectorAll('.align-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      state.align = this.dataset.align;
+      document.querySelectorAll('.align-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.align === state.align);
+      });
+      render();
+    });
+  });
+
+  // Range inputs
+  var rangeConfigs = [
+    ['fontSize', 'fontSize', 'px'],
+    ['lineHeight', 'lineHeight', '%'],
+    ['letterSpacing', 'letterSpacing', 'px'],
+    ['rotation', 'rotation', '°'],
+    ['strokeWidth', 'strokeWidth', 'px'],
+    ['shadowBlur', 'shadowBlur', 'px'],
+    ['shadowX', 'shadowX', 'px'],
+    ['shadowY', 'shadowY', 'px'],
+    ['bgOpacity', 'bgOpacity', '%'],
+    ['bgRadius', 'bgRadius', 'px'],
+    ['bgPadding', 'bgPadding', 'px']
+  ];
+  rangeConfigs.forEach(function(cfg) {
+    var el = document.getElementById(cfg[0]);
+    el.addEventListener('input', function() {
+      state[cfg[1]] = parseInt(el.value);
+      setText(cfg[0] + 'Val', el.value + cfg[2]);
+      render();
+    });
+  });
+
+  // Color inputs
+  ['textColor','strokeColor','shadowColor','bgColor'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', function(e) {
+      state[id] = e.target.value;
+      render();
+    });
+  });
+
+  // Text input
+  document.getElementById('textInput').addEventListener('input', function(e) {
+    state.text = e.target.value;
+    render();
+  });
+
+  // Render
+  function render() {
+    var canvas = document.getElementById('previewCanvas');
+    var ctx = canvas.getContext('2d');
+
+    var lines = state.text.split('\n');
+    if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
+      lines = [' '];
+    }
+    var fontStyle = (state.italic ? 'italic ' : '') + (state.bold ? 'bold ' : '');
+    var fontFamily = state.activeFont || '-apple-system, sans-serif';
+    var fontSize = state.fontSize * SCALE;
+    var lineH = fontSize * (state.lineHeight / 100);
+    var letterSp = state.letterSpacing * SCALE;
+
+    ctx.font = fontStyle + fontSize + 'px "' + fontFamily + '"';
+
+    // Measure content size (before rotation)
+    var contentW, contentH;
+
+    if (state.vertical) {
+      // Vertical: each "line" becomes a column (right to left)
+      // Each char stacks vertically, columns go right-to-left
+      var maxChars = 0;
+      lines.forEach(function(line) { if (line.length > maxChars) maxChars = line.length; });
+      var colSpacing = fontSize * (state.lineHeight / 100);
+      contentW = colSpacing * lines.length;
+      contentH = fontSize * maxChars + letterSp * Math.max(0, maxChars - 1);
+    } else {
+      // Horizontal: normal
+      var maxW = 0;
+      var lineWidths = [];
+      lines.forEach(function(line) {
+        var w = ctx.measureText(line).width;
+        if (letterSp && line.length > 1) w += letterSp * (line.length - 1);
+        lineWidths.push(w);
+        if (w > maxW) maxW = w;
+      });
+      contentW = maxW;
+      contentH = lineH * lines.length;
+    }
+
+    var pad = state.bg ? state.bgPadding * SCALE : 0;
+    var strokeExtra = state.stroke ? state.strokeWidth * SCALE : 0;
+    var shadowExtra = state.shadow ? (Math.max(Math.abs(state.shadowX), Math.abs(state.shadowY)) + state.shadowBlur) * SCALE : 0;
+    var extra = strokeExtra + shadowExtra + 5 * SCALE;
+
+    var innerW = contentW + pad * 2 + extra * 2;
+    var innerH = contentH + pad * 2 + extra * 2;
+
+    // Calculate canvas size after rotation
+    var angle = state.rotation * Math.PI / 180;
+    var cosA = Math.abs(Math.cos(angle));
+    var sinA = Math.abs(Math.sin(angle));
+    var cw = Math.ceil(innerW * cosA + innerH * sinA) + 4 * SCALE;
+    var ch = Math.ceil(innerW * sinA + innerH * cosA) + 4 * SCALE;
+
+    canvas.width = cw;
+    canvas.height = ch;
+    var displayW = Math.min(cw / SCALE, 360);
+    canvas.style.width = displayW + 'px';
+    canvas.style.height = (ch / SCALE) * (displayW / (cw / SCALE)) + 'px';
+
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Move to center, rotate, then draw from center
+    ctx.save();
+    ctx.translate(cw / 2, ch / 2);
+    ctx.rotate(angle);
+    ctx.translate(-innerW / 2, -innerH / 2);
+
+    var offsetX = extra;
+    var offsetY = extra;
+
+    // Background box
+    if (state.bg) {
+      var r = state.bgRadius * SCALE;
+      var bx = offsetX - pad;
+      var by = offsetY - pad;
+      var bw = contentW + pad * 2;
+      var bh = contentH + pad * 2;
+      var alpha = Math.round(state.bgOpacity * 2.55).toString(16).padStart(2, '0');
+      ctx.fillStyle = state.bgColor + alpha;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(bx, by, bw, bh, r);
+      } else {
+        ctx.moveTo(bx + r, by);
+        ctx.lineTo(bx + bw - r, by);
+        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + r);
+        ctx.lineTo(bx + bw, by + bh - r);
+        ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - r, by + bh);
+        ctx.lineTo(bx + r, by + bh);
+        ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - r);
+        ctx.lineTo(bx, by + r);
+        ctx.quadraticCurveTo(bx, by, bx + r, by);
+        ctx.closePath();
+      }
+      ctx.fill();
+    }
+
+    // Text rendering
+    ctx.font = fontStyle + fontSize + 'px "' + fontFamily + '"';
+    ctx.textBaseline = 'top';
+
+    if (state.vertical) {
+      // Vertical text: columns right-to-left, chars top-to-bottom
+      var colSpacing = fontSize * (state.lineHeight / 100);
+      lines.forEach(function(line, colIdx) {
+        // Right-to-left column order
+        var x = offsetX + contentW - colSpacing * (colIdx + 1) + (colSpacing - fontSize) / 2;
+        for (var ci = 0; ci < line.length; ci++) {
+          var charW = ctx.measureText(line[ci]).width;
+          // Center each char horizontally within its column
+          var charX = x + (fontSize - charW) / 2;
+          var charY = offsetY + ci * (fontSize + letterSp);
+          drawChar(ctx, line[ci], charX, charY);
+        }
+      });
+    } else {
+      // Horizontal text
+      // Recalculate lineWidths (we need them for alignment)
+      var lineWidths2 = [];
+      var maxW2 = 0;
+      lines.forEach(function(line) {
+        var w = ctx.measureText(line).width;
+        if (letterSp && line.length > 1) w += letterSp * (line.length - 1);
+        lineWidths2.push(w);
+        if (w > maxW2) maxW2 = w;
+      });
+
+      lines.forEach(function(line, i) {
+        var x = offsetX;
+        if (state.align === 'center') x = offsetX + (contentW - lineWidths2[i]) / 2;
+        else if (state.align === 'right') x = offsetX + contentW - lineWidths2[i];
+        var y = offsetY + i * lineH;
+
+        if (letterSp && line.length > 1) {
+          var currentX = x;
+          for (var j = 0; j < line.length; j++) {
+            drawChar(ctx, line[j], currentX, y);
+            currentX += ctx.measureText(line[j]).width + letterSp;
+          }
+        } else {
+          drawChar(ctx, line, x, y);
+        }
+      });
+    }
+
+    ctx.restore();
+  }
+
+  function drawChar(ctx, char, x, y) {
+    if (state.shadow) {
+      ctx.shadowColor = state.shadowColor;
+      ctx.shadowBlur = state.shadowBlur * SCALE;
+      ctx.shadowOffsetX = state.shadowX * SCALE;
+      ctx.shadowOffsetY = state.shadowY * SCALE;
+    }
+    if (state.stroke) {
+      ctx.strokeStyle = state.strokeColor;
+      ctx.lineWidth = state.strokeWidth * SCALE;
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeText(char, x, y);
+    }
+    ctx.fillStyle = state.textColor;
+    ctx.fillText(char, x, y);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
+
+  // Export
+  document.getElementById('exportBtn').addEventListener('click', function() {
+    var canvas = document.getElementById('previewCanvas');
+    var dataUrl = canvas.toDataURL('image/png');
+    var result = document.getElementById('exportResult');
+    while (result.firstChild) result.removeChild(result.firstChild);
+
+    var img = document.createElement('img');
+    img.id = 'savedImage';
+    img.src = dataUrl;
+    result.appendChild(img);
+
+    var hint = document.createElement('div');
+    hint.className = 'save-hint';
+    hint.textContent = '長按上方圖片 → 儲存到相簿 → IG 限動用「貼圖」貼上';
+    result.appendChild(hint);
+  });
+
+  // Initial render
+  render();
+})();
+</script>
+</body>
+</html>
