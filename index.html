@@ -5,31 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>IG 文字貼紙產生器</title>
 <style>
+@font-face { font-family: 'jinxuan'; src: url('fonts/jinxuan-bold.woff2') format('woff2'); }
+@font-face { font-family: 'jinxuanlatte'; src: url('fonts/jinxuanlatte-bold.woff2') format('woff2'); }
+@font-face { font-family: 'lihsianti'; src: url('fonts/lihsianti.woff2') format('woff2'); }
+@font-face { font-family: 'tsuhsianti'; src: url('fonts/tsuhsianti.woff2') format('woff2'); }
+@font-face { font-family: 'burnfont'; src: url('fonts/burnfont.woff2') format('woff2'); }
+@font-face { font-family: 'creamfont'; src: url('fonts/creamfont.woff2') format('woff2'); }
+@font-face { font-family: 'twroadfont'; src: url('fonts/twroadfont.woff2') format('woff2'); }
+@font-face { font-family: 'mantou'; src: url('fonts/MantouSans.woff2') format('woff2'); }
+@font-face { font-family: 'biantao'; src: url('fonts/ZiHunBianTaoTi.woff2') format('woff2'); }
+
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; padding: 16px; padding-bottom: 120px; }
 h1 { font-size: 20px; text-align: center; margin-bottom: 16px; }
 .section { background: #16213e; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
 .section-title { font-size: 13px; color: #8899aa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
 label { display: block; font-size: 14px; color: #ccc; margin-bottom: 6px; }
-.font-upload-area { border: 2px dashed #334; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+.font-upload-area { border: 2px dashed #334; border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
 .font-upload-area:active { border-color: #667; }
 .font-upload-area.has-font { border-color: #4ade80; background: rgba(74,222,128,0.05); }
 #fontFileInput { display: none; }
-.font-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.font-chip { background: #1a1a2e; border: 1px solid #334; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.font-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.font-chip { background: #1a1a2e; border: 1px solid #334; border-radius: 8px; padding: 8px 12px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
 .font-chip.active { border-color: #818cf8; background: rgba(129,140,248,0.15); color: #818cf8; }
+.font-chip.builtin { border-color: #334; }
 textarea { width: 100%; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #fff; font-size: 16px; padding: 10px; resize: vertical; min-height: 60px; }
 textarea:focus { outline: none; border-color: #818cf8; }
 .control-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .control-row label { margin: 0; flex-shrink: 0; width: 70px; font-size: 13px; }
 input[type="range"] { flex: 1; accent-color: #818cf8; height: 6px; }
-.range-value { width: 45px; text-align: right; font-size: 13px; color: #818cf8; font-variant-numeric: tabular-nums; }
+.range-value { width: 50px; text-align: right; font-size: 13px; color: #818cf8; font-variant-numeric: tabular-nums; }
 input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6px; cursor: pointer; background: none; }
-.color-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.color-presets { display: flex; gap: 6px; flex-wrap: wrap; }
 .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
 .color-dot.active { border-color: #fff; }
 .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.toggle { width: 44px; height: 24px; background: #334; border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; }
+.toggle { width: 44px; height: 24px; background: #334; border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
 .toggle.on { background: #818cf8; }
 .toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s; }
 .toggle.on::after { transform: translateX(20px); }
@@ -37,29 +48,29 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
 #previewCanvas { max-width: 100%; }
 .export-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff; font-size: 17px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; margin-top: 12px; transition: transform 0.1s; }
 .export-btn:active { transform: scale(0.97); }
-.align-btns { display: flex; gap: 6px; }
-.align-btn { width: 36px; height: 36px; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #ccc; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.align-btn.active { border-color: #818cf8; color: #818cf8; }
+.btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-sm { padding: 6px 14px; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #ccc; font-size: 13px; cursor: pointer; }
+.btn-sm.active { border-color: #818cf8; color: #818cf8; background: rgba(129,140,248,0.1); }
 #savedImage { max-width: 100%; border-radius: 8px; margin-top: 12px; }
 .save-hint { text-align: center; font-size: 13px; color: #8899aa; margin-top: 8px; }
-.style-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-.style-btn { padding: 6px 14px; background: #1a1a2e; border: 1px solid #334; border-radius: 8px; color: #ccc; font-size: 13px; cursor: pointer; }
-.style-btn.active { border-color: #818cf8; color: #818cf8; background: rgba(129,140,248,0.1); }
+.font-section-label { font-size: 11px; color: #556; margin: 8px 0 4px; text-transform: uppercase; }
 </style>
 </head>
 <body>
 
 <h1>IG 文字貼紙產生器</h1>
 
-<!-- Font Upload -->
+<!-- Font Selection -->
 <div class="section">
-  <div class="section-title">字體</div>
+  <div class="section-title">字體選擇</div>
+  <div class="font-section-label">內建字體</div>
+  <div class="font-grid" id="builtinFontList"></div>
+  <div class="font-section-label" style="margin-top:12px;">上傳自訂字體</div>
   <div class="font-upload-area" id="fontUploadArea">
-    <div style="font-size:28px; margin-bottom:6px;">+</div>
-    <div style="font-size:14px; color:#8899aa;">點擊上傳字體檔 (TTF / OTF)</div>
+    <span style="font-size:20px;">+</span> <span style="font-size:13px; color:#8899aa;">TTF / OTF / WOFF2</span>
   </div>
   <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" multiple>
-  <div class="font-list" id="fontList"></div>
+  <div class="font-grid" id="customFontList"></div>
 </div>
 
 <!-- Text Input -->
@@ -92,10 +103,15 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     <div class="color-presets" id="textColorPresets"></div>
   </div>
   <div class="control-row">
+    <label>透明度</label>
+    <input type="range" id="textOpacity" min="0" max="100" value="100">
+    <span class="range-value" id="textOpacityVal">100%</span>
+  </div>
+  <div class="control-row">
     <label>排列</label>
-    <div class="style-btns">
-      <button class="style-btn active" id="horizBtn">橫排</button>
-      <button class="style-btn" id="vertBtn">直排</button>
+    <div class="btn-row">
+      <button class="btn-sm active" id="horizBtn">橫排</button>
+      <button class="btn-sm" id="vertBtn">直排</button>
     </div>
   </div>
   <div class="control-row">
@@ -105,17 +121,48 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   </div>
   <div class="control-row">
     <label>對齊</label>
-    <div class="align-btns">
-      <button class="align-btn active" data-align="center">中</button>
-      <button class="align-btn" data-align="left">左</button>
-      <button class="align-btn" data-align="right">右</button>
+    <div class="btn-row">
+      <button class="btn-sm active" data-align="center">中</button>
+      <button class="btn-sm" data-align="left">左</button>
+      <button class="btn-sm" data-align="right">右</button>
     </div>
   </div>
   <div class="control-row">
     <label>樣式</label>
-    <div class="style-btns">
-      <button class="style-btn" id="boldBtn"><b>粗體</b></button>
-      <button class="style-btn" id="italicBtn"><i>斜體</i></button>
+    <div class="btn-row">
+      <button class="btn-sm" id="boldBtn"><b>粗體</b></button>
+      <button class="btn-sm" id="italicBtn"><i>斜體</i></button>
+      <button class="btn-sm" id="underlineBtn"><u>底線</u></button>
+    </div>
+  </div>
+  <div class="control-row">
+    <label>翻轉</label>
+    <div class="btn-row">
+      <button class="btn-sm" id="flipHBtn">水平翻轉</button>
+      <button class="btn-sm" id="flipVBtn">垂直翻轉</button>
+    </div>
+  </div>
+</div>
+
+<!-- Curved Text -->
+<div class="section">
+  <div class="section-title">弧形文字</div>
+  <div class="toggle-row">
+    <label>啟用弧形</label>
+    <div class="toggle" id="curveToggle"></div>
+  </div>
+  <div id="curveControls" style="display:none;">
+    <div class="control-row">
+      <label>弧度</label>
+      <input type="range" id="curveRadius" min="50" max="800" value="300">
+      <span class="range-value" id="curveRadiusVal">300</span>
+    </div>
+    <div class="control-row">
+      <label>方向</label>
+      <div class="btn-row">
+        <button class="btn-sm active" id="curveUpBtn">向上弧</button>
+        <button class="btn-sm" id="curveDownBtn">向下弧</button>
+      </div>
     </div>
   </div>
 </div>
@@ -213,20 +260,39 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
 
 <script>
 (function() {
-  // State
+  // Built-in fonts
+  var BUILTIN_FONTS = [
+    { id: 'jinxuan', name: '金萱粗體' },
+    { id: 'jinxuanlatte', name: '金萱那堤' },
+    { id: 'lihsianti', name: '粒線體' },
+    { id: 'tsuhsianti', name: '粗線體' },
+    { id: 'burnfont', name: '激燃體' },
+    { id: 'creamfont', name: '凝書體' },
+    { id: 'twroadfont', name: '道路體' },
+    { id: 'mantou', name: '饅頭黑體' },
+    { id: 'biantao', name: '扁桃體' }
+  ];
+
   var state = {
     fonts: [],
-    activeFont: '',
+    activeFont: 'jinxuan',
     text: '水電維修找我們',
     fontSize: 64,
     lineHeight: 130,
     letterSpacing: 0,
     textColor: '#ffffff',
+    textOpacity: 100,
     align: 'center',
     vertical: false,
     rotation: 0,
     bold: false,
     italic: false,
+    underline: false,
+    flipH: false,
+    flipV: false,
+    curve: false,
+    curveRadius: 300,
+    curveDown: false,
     stroke: false,
     strokeWidth: 4,
     strokeColor: '#000000',
@@ -242,13 +308,10 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     bgPadding: 20
   };
 
-  var SCALE = 4; // 4x for crisp text on retina displays
-  var colorPresets = ['#ffffff','#000000','#f87171','#fb923c','#facc15','#4ade80','#38bdf8','#818cf8','#e879f9','#ff6b6b'];
+  var SCALE = 4;
+  var colorPresets = ['#ffffff','#000000','#f87171','#fb923c','#facc15','#4ade80','#38bdf8','#818cf8','#e879f9','#ff6b6b','#EABA28','#437FFF'];
 
-  // Safe DOM helpers
-  function setText(id, text) {
-    document.getElementById(id).textContent = text;
-  }
+  function setText(id, text) { document.getElementById(id).textContent = text; }
 
   function initColorPresets(containerId, inputId) {
     var container = document.getElementById(containerId);
@@ -266,6 +329,29 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   initColorPresets('textColorPresets', 'textColor');
   initColorPresets('strokeColorPresets', 'strokeColor');
 
+  // Render built-in font list
+  var builtinList = document.getElementById('builtinFontList');
+  BUILTIN_FONTS.forEach(function(f) {
+    var chip = document.createElement('div');
+    chip.className = 'font-chip builtin' + (f.id === state.activeFont ? ' active' : '');
+    chip.textContent = f.name;
+    chip.style.fontFamily = f.id + ', sans-serif';
+    chip.dataset.fontId = f.id;
+    chip.addEventListener('click', function() {
+      state.activeFont = f.id;
+      updateFontChips();
+      render();
+    });
+    builtinList.appendChild(chip);
+  });
+
+  function updateFontChips() {
+    document.querySelectorAll('.font-chip').forEach(function(c) {
+      var fid = c.dataset.fontId;
+      c.classList.toggle('active', fid === state.activeFont);
+    });
+  }
+
   // Font upload
   document.getElementById('fontUploadArea').addEventListener('click', function() {
     document.getElementById('fontFileInput').click();
@@ -274,111 +360,81 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   document.getElementById('fontFileInput').addEventListener('change', function(e) {
     var files = e.target.files;
     if (!files || files.length === 0) return;
-    var area = document.getElementById('fontUploadArea');
-    var statusEl = area.querySelector('div:last-child');
 
     Array.from(files).forEach(function(file) {
       var fontName = file.name.replace(/\.(ttf|otf|woff2?)$/i, '');
-      statusEl.textContent = '載入中: ' + fontName + '...';
-
       var reader = new FileReader();
       reader.onload = function(evt) {
-        var buf = evt.target.result;
         try {
-          var font = new FontFace(fontName, buf);
-          font.load().then(function(loadedFont) {
-            document.fonts.add(loadedFont);
+          var font = new FontFace(fontName, evt.target.result);
+          font.load().then(function(loaded) {
+            document.fonts.add(loaded);
             if (state.fonts.indexOf(fontName) === -1) {
               state.fonts.push(fontName);
             }
             state.activeFont = fontName;
-            area.classList.add('has-font');
-            statusEl.textContent = '已載入: ' + state.fonts.join(', ');
-            renderFontList();
+            renderCustomFontList();
+            updateFontChips();
             render();
           }).catch(function(err) {
-            statusEl.textContent = '字體載入失敗: ' + err.message;
-            statusEl.style.color = '#f87171';
+            alert('字體載入失敗: ' + err.message);
           });
         } catch(err) {
-          statusEl.textContent = '字體格式錯誤: ' + err.message;
-          statusEl.style.color = '#f87171';
+          alert('字體格式錯誤: ' + err.message);
         }
-      };
-      reader.onerror = function() {
-        statusEl.textContent = '檔案讀取失敗，請重試';
-        statusEl.style.color = '#f87171';
       };
       reader.readAsArrayBuffer(file);
     });
-    // Reset input so same file can be re-selected
     e.target.value = '';
   });
 
-  function renderFontList() {
-    var list = document.getElementById('fontList');
+  function renderCustomFontList() {
+    var list = document.getElementById('customFontList');
     while (list.firstChild) list.removeChild(list.firstChild);
     state.fonts.forEach(function(name) {
       var chip = document.createElement('div');
       chip.className = 'font-chip' + (name === state.activeFont ? ' active' : '');
       chip.textContent = name;
-
-      var removeBtn = document.createElement('span');
-      removeBtn.textContent = ' x';
-      removeBtn.style.color = '#f87171';
-      removeBtn.style.fontSize = '11px';
-      removeBtn.style.marginLeft = '6px';
-      removeBtn.style.cursor = 'pointer';
-      removeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        state.fonts = state.fonts.filter(function(f) { return f !== name; });
-        if (state.activeFont === name) state.activeFont = state.fonts[0] || '';
-        renderFontList();
-        render();
-      });
-      chip.appendChild(removeBtn);
-
+      chip.style.fontFamily = '"' + name + '", sans-serif';
+      chip.dataset.fontId = name;
       chip.addEventListener('click', function() {
         state.activeFont = name;
-        renderFontList();
+        updateFontChips();
         render();
       });
       list.appendChild(chip);
     });
   }
 
-  // Toggles
-  document.getElementById('strokeToggle').addEventListener('click', function() {
-    state.stroke = !state.stroke;
-    this.classList.toggle('on', state.stroke);
-    document.getElementById('strokeControls').style.display = state.stroke ? 'block' : 'none';
-    render();
-  });
-  document.getElementById('shadowToggle').addEventListener('click', function() {
-    state.shadow = !state.shadow;
-    this.classList.toggle('on', state.shadow);
-    document.getElementById('shadowControls').style.display = state.shadow ? 'block' : 'none';
-    render();
-  });
-  document.getElementById('bgToggle').addEventListener('click', function() {
-    state.bg = !state.bg;
-    this.classList.toggle('on', state.bg);
-    document.getElementById('bgControls').style.display = state.bg ? 'block' : 'none';
-    render();
-  });
+  // Toggle helpers
+  function bindToggle(toggleId, controlsId, stateKey) {
+    document.getElementById(toggleId).addEventListener('click', function() {
+      state[stateKey] = !state[stateKey];
+      this.classList.toggle('on', state[stateKey]);
+      if (controlsId) document.getElementById(controlsId).style.display = state[stateKey] ? 'block' : 'none';
+      render();
+    });
+  }
+  bindToggle('strokeToggle', 'strokeControls', 'stroke');
+  bindToggle('shadowToggle', 'shadowControls', 'shadow');
+  bindToggle('bgToggle', 'bgControls', 'bg');
+  bindToggle('curveToggle', 'curveControls', 'curve');
 
-  document.getElementById('boldBtn').addEventListener('click', function() {
-    state.bold = !state.bold;
-    this.classList.toggle('active', state.bold);
-    render();
-  });
-  document.getElementById('italicBtn').addEventListener('click', function() {
-    state.italic = !state.italic;
-    this.classList.toggle('active', state.italic);
-    render();
-  });
+  // Style buttons
+  function bindStyleBtn(id, key) {
+    document.getElementById(id).addEventListener('click', function() {
+      state[key] = !state[key];
+      this.classList.toggle('active', state[key]);
+      render();
+    });
+  }
+  bindStyleBtn('boldBtn', 'bold');
+  bindStyleBtn('italicBtn', 'italic');
+  bindStyleBtn('underlineBtn', 'underline');
+  bindStyleBtn('flipHBtn', 'flipH');
+  bindStyleBtn('flipVBtn', 'flipV');
 
-  // Vertical / Horizontal
+  // Layout buttons
   document.getElementById('horizBtn').addEventListener('click', function() {
     state.vertical = false;
     document.getElementById('horizBtn').classList.add('active');
@@ -392,11 +448,25 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     render();
   });
 
+  // Curve direction
+  document.getElementById('curveUpBtn').addEventListener('click', function() {
+    state.curveDown = false;
+    document.getElementById('curveUpBtn').classList.add('active');
+    document.getElementById('curveDownBtn').classList.remove('active');
+    render();
+  });
+  document.getElementById('curveDownBtn').addEventListener('click', function() {
+    state.curveDown = true;
+    document.getElementById('curveDownBtn').classList.add('active');
+    document.getElementById('curveUpBtn').classList.remove('active');
+    render();
+  });
+
   // Alignment
-  document.querySelectorAll('.align-btn').forEach(function(btn) {
+  document.querySelectorAll('[data-align]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       state.align = this.dataset.align;
-      document.querySelectorAll('.align-btn').forEach(function(b) {
+      document.querySelectorAll('[data-align]').forEach(function(b) {
         b.classList.toggle('active', b.dataset.align === state.align);
       });
       render();
@@ -404,21 +474,14 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
   });
 
   // Range inputs
-  var rangeConfigs = [
-    ['fontSize', 'fontSize', 'px'],
-    ['lineHeight', 'lineHeight', '%'],
-    ['letterSpacing', 'letterSpacing', 'px'],
-    ['rotation', 'rotation', '°'],
-    ['strokeWidth', 'strokeWidth', 'px'],
-    ['shadowBlur', 'shadowBlur', 'px'],
-    ['shadowX', 'shadowX', 'px'],
-    ['shadowY', 'shadowY', 'px'],
-    ['bgOpacity', 'bgOpacity', '%'],
-    ['bgRadius', 'bgRadius', 'px'],
-    ['bgPadding', 'bgPadding', 'px']
-  ];
-  rangeConfigs.forEach(function(cfg) {
+  [
+    ['fontSize','fontSize','px'],['lineHeight','lineHeight','%'],['letterSpacing','letterSpacing','px'],
+    ['textOpacity','textOpacity','%'],['rotation','rotation','\u00b0'],['curveRadius','curveRadius',''],
+    ['strokeWidth','strokeWidth','px'],['shadowBlur','shadowBlur','px'],['shadowX','shadowX','px'],
+    ['shadowY','shadowY','px'],['bgOpacity','bgOpacity','%'],['bgRadius','bgRadius','px'],['bgPadding','bgPadding','px']
+  ].forEach(function(cfg) {
     var el = document.getElementById(cfg[0]);
+    if (!el) return;
     el.addEventListener('input', function() {
       state[cfg[1]] = parseInt(el.value);
       setText(cfg[0] + 'Val', el.value + cfg[2]);
@@ -440,42 +503,42 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     render();
   });
 
-  // Render
+  // === RENDER ===
   function render() {
     var canvas = document.getElementById('previewCanvas');
     var ctx = canvas.getContext('2d');
+    var text = state.text || ' ';
+    var lines = text.split('\n');
+    if (lines.length === 0) lines = [' '];
 
-    var lines = state.text.split('\n');
-    if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
-      lines = [' '];
-    }
     var fontStyle = (state.italic ? 'italic ' : '') + (state.bold ? 'bold ' : '');
-    var fontFamily = state.activeFont || '-apple-system, sans-serif';
+    var fontFamily = '"' + state.activeFont + '", -apple-system, sans-serif';
     var fontSize = state.fontSize * SCALE;
     var lineH = fontSize * (state.lineHeight / 100);
     var letterSp = state.letterSpacing * SCALE;
 
-    ctx.font = fontStyle + fontSize + 'px "' + fontFamily + '"';
+    // Curved text mode
+    if (state.curve && !state.vertical) {
+      renderCurved(canvas, ctx, lines, fontStyle, fontFamily, fontSize, letterSp);
+      return;
+    }
 
-    // Measure content size (before rotation)
+    ctx.font = fontStyle + fontSize + 'px ' + fontFamily;
+
     var contentW, contentH;
-
     if (state.vertical) {
-      // Vertical: each "line" becomes a column (right to left)
-      // Each char stacks vertically, columns go right-to-left
       var maxChars = 0;
-      lines.forEach(function(line) { if (line.length > maxChars) maxChars = line.length; });
-      var colSpacing = fontSize * (state.lineHeight / 100);
-      contentW = colSpacing * lines.length;
+      lines.forEach(function(l) { if (l.length > maxChars) maxChars = l.length; });
+      var colSp = fontSize * (state.lineHeight / 100);
+      contentW = colSp * lines.length;
       contentH = fontSize * maxChars + letterSp * Math.max(0, maxChars - 1);
     } else {
-      // Horizontal: normal
       var maxW = 0;
-      var lineWidths = [];
-      lines.forEach(function(line) {
-        var w = ctx.measureText(line).width;
-        if (letterSp && line.length > 1) w += letterSp * (line.length - 1);
-        lineWidths.push(w);
+      var lw = [];
+      lines.forEach(function(l) {
+        var w = ctx.measureText(l).width;
+        if (letterSp && l.length > 1) w += letterSp * (l.length - 1);
+        lw.push(w);
         if (w > maxW) maxW = w;
       });
       contentW = maxW;
@@ -483,135 +546,239 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     }
 
     var pad = state.bg ? state.bgPadding * SCALE : 0;
-    var strokeExtra = state.stroke ? state.strokeWidth * SCALE : 0;
-    var shadowExtra = state.shadow ? (Math.max(Math.abs(state.shadowX), Math.abs(state.shadowY)) + state.shadowBlur) * SCALE : 0;
-    var extra = strokeExtra + shadowExtra + 5 * SCALE;
-
+    var sEx = state.stroke ? state.strokeWidth * SCALE : 0;
+    var shEx = state.shadow ? (Math.max(Math.abs(state.shadowX), Math.abs(state.shadowY)) + state.shadowBlur) * SCALE : 0;
+    var extra = sEx + shEx + 5 * SCALE;
     var innerW = contentW + pad * 2 + extra * 2;
     var innerH = contentH + pad * 2 + extra * 2;
 
-    // Calculate canvas size after rotation
     var angle = state.rotation * Math.PI / 180;
     var cosA = Math.abs(Math.cos(angle));
     var sinA = Math.abs(Math.sin(angle));
     var cw = Math.ceil(innerW * cosA + innerH * sinA) + 4 * SCALE;
     var ch = Math.ceil(innerW * sinA + innerH * cosA) + 4 * SCALE;
 
-    canvas.width = cw;
-    canvas.height = ch;
-    var displayW = Math.min(cw / SCALE, 360);
-    canvas.style.width = displayW + 'px';
-    canvas.style.height = (ch / SCALE) * (displayW / (cw / SCALE)) + 'px';
-
+    canvas.width = cw; canvas.height = ch;
+    var dw = Math.min(cw / SCALE, 360);
+    canvas.style.width = dw + 'px';
+    canvas.style.height = (ch / SCALE) * (dw / (cw / SCALE)) + 'px';
     ctx.clearRect(0, 0, cw, ch);
 
-    // Move to center, rotate, then draw from center
     ctx.save();
     ctx.translate(cw / 2, ch / 2);
     ctx.rotate(angle);
+    if (state.flipH) ctx.scale(-1, 1);
+    if (state.flipV) ctx.scale(1, -1);
     ctx.translate(-innerW / 2, -innerH / 2);
 
-    var offsetX = extra;
-    var offsetY = extra;
+    var ox = extra, oy = extra;
 
-    // Background box
-    if (state.bg) {
-      var r = state.bgRadius * SCALE;
-      var bx = offsetX - pad;
-      var by = offsetY - pad;
-      var bw = contentW + pad * 2;
-      var bh = contentH + pad * 2;
-      var alpha = Math.round(state.bgOpacity * 2.55).toString(16).padStart(2, '0');
-      ctx.fillStyle = state.bgColor + alpha;
-      ctx.beginPath();
-      if (ctx.roundRect) {
-        ctx.roundRect(bx, by, bw, bh, r);
-      } else {
-        ctx.moveTo(bx + r, by);
-        ctx.lineTo(bx + bw - r, by);
-        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + r);
-        ctx.lineTo(bx + bw, by + bh - r);
-        ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - r, by + bh);
-        ctx.lineTo(bx + r, by + bh);
-        ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - r);
-        ctx.lineTo(bx, by + r);
-        ctx.quadraticCurveTo(bx, by, bx + r, by);
-        ctx.closePath();
-      }
-      ctx.fill();
-    }
+    // Background
+    if (state.bg) drawBg(ctx, ox - pad, oy - pad, contentW + pad * 2, contentH + pad * 2);
 
-    // Text rendering
-    ctx.font = fontStyle + fontSize + 'px "' + fontFamily + '"';
+    ctx.font = fontStyle + fontSize + 'px ' + fontFamily;
     ctx.textBaseline = 'top';
+    ctx.globalAlpha = state.textOpacity / 100;
 
     if (state.vertical) {
-      // Vertical text: columns right-to-left, chars top-to-bottom
-      var colSpacing = fontSize * (state.lineHeight / 100);
-      lines.forEach(function(line, colIdx) {
-        // Right-to-left column order
-        var x = offsetX + contentW - colSpacing * (colIdx + 1) + (colSpacing - fontSize) / 2;
-        for (var ci = 0; ci < line.length; ci++) {
-          var charW = ctx.measureText(line[ci]).width;
-          // Center each char horizontally within its column
-          var charX = x + (fontSize - charW) / 2;
-          var charY = offsetY + ci * (fontSize + letterSp);
-          drawChar(ctx, line[ci], charX, charY);
+      var colSp2 = fontSize * (state.lineHeight / 100);
+      lines.forEach(function(line, ci) {
+        var x = ox + contentW - colSp2 * (ci + 1) + (colSp2 - fontSize) / 2;
+        for (var i = 0; i < line.length; i++) {
+          var cw2 = ctx.measureText(line[i]).width;
+          drawChar(ctx, line[i], x + (fontSize - cw2) / 2, oy + i * (fontSize + letterSp), fontSize);
         }
       });
     } else {
-      // Horizontal text
-      // Recalculate lineWidths (we need them for alignment)
-      var lineWidths2 = [];
-      var maxW2 = 0;
-      lines.forEach(function(line) {
-        var w = ctx.measureText(line).width;
-        if (letterSp && line.length > 1) w += letterSp * (line.length - 1);
-        lineWidths2.push(w);
-        if (w > maxW2) maxW2 = w;
+      // Recalculate lw
+      var lw2 = []; var mw2 = 0;
+      lines.forEach(function(l) {
+        var w = ctx.measureText(l).width;
+        if (letterSp && l.length > 1) w += letterSp * (l.length - 1);
+        lw2.push(w); if (w > mw2) mw2 = w;
       });
-
       lines.forEach(function(line, i) {
-        var x = offsetX;
-        if (state.align === 'center') x = offsetX + (contentW - lineWidths2[i]) / 2;
-        else if (state.align === 'right') x = offsetX + contentW - lineWidths2[i];
-        var y = offsetY + i * lineH;
-
+        var x = ox;
+        if (state.align === 'center') x = ox + (contentW - lw2[i]) / 2;
+        else if (state.align === 'right') x = ox + contentW - lw2[i];
+        var y = oy + i * lineH;
         if (letterSp && line.length > 1) {
-          var currentX = x;
+          var cx2 = x;
           for (var j = 0; j < line.length; j++) {
-            drawChar(ctx, line[j], currentX, y);
-            currentX += ctx.measureText(line[j]).width + letterSp;
+            drawChar(ctx, line[j], cx2, y, fontSize);
+            cx2 += ctx.measureText(line[j]).width + letterSp;
           }
         } else {
-          drawChar(ctx, line, x, y);
+          drawChar(ctx, line, x, y, fontSize);
         }
       });
     }
-
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
-  function drawChar(ctx, char, x, y) {
+  // Curved text rendering
+  function renderCurved(canvas, ctx, lines, fontStyle, fontFamily, fontSize, letterSp) {
+    var line = lines.join(' ');
+    var radius = state.curveRadius * SCALE;
+
+    ctx.font = fontStyle + fontSize + 'px ' + fontFamily;
+
+    // Measure each char
+    var chars = [];
+    var totalW = 0;
+    for (var i = 0; i < line.length; i++) {
+      var w = ctx.measureText(line[i]).width;
+      chars.push({ ch: line[i], w: w });
+      totalW += w + (i < line.length - 1 ? letterSp : 0);
+    }
+
+    var totalAngle = totalW / radius;
+    var sEx = state.stroke ? state.strokeWidth * SCALE : 0;
+    var shEx = state.shadow ? (Math.max(Math.abs(state.shadowX), Math.abs(state.shadowY)) + state.shadowBlur) * SCALE : 0;
+    var margin = sEx + shEx + fontSize + 10 * SCALE;
+
+    var size = (radius + margin) * 2;
+    var cw = Math.ceil(size) + 4 * SCALE;
+    var ch = Math.ceil(size) + 4 * SCALE;
+
+    // Apply rotation to canvas size
+    var angle = state.rotation * Math.PI / 180;
+    var cosA = Math.abs(Math.cos(angle));
+    var sinA = Math.abs(Math.sin(angle));
+    var finalW = Math.ceil(cw * cosA + ch * sinA);
+    var finalH = Math.ceil(cw * sinA + ch * cosA);
+
+    canvas.width = finalW; canvas.height = finalH;
+    var dw = Math.min(finalW / SCALE, 360);
+    canvas.style.width = dw + 'px';
+    canvas.style.height = (finalH / SCALE) * (dw / (finalW / SCALE)) + 'px';
+    ctx.clearRect(0, 0, finalW, finalH);
+
+    ctx.save();
+    ctx.translate(finalW / 2, finalH / 2);
+    ctx.rotate(angle);
+    if (state.flipH) ctx.scale(-1, 1);
+    if (state.flipV) ctx.scale(1, -1);
+
+    // Background (circular segment)
+    if (state.bg) {
+      var pad = state.bgPadding * SCALE;
+      var bgR = state.bgRadius * SCALE;
+      var arcOuter = radius + fontSize / 2 + pad;
+      var arcInner = radius - fontSize / 2 - pad;
+      var bgAngle = totalAngle + (pad * 2) / radius;
+      var startA = -Math.PI / 2 - bgAngle / 2;
+      var endA = -Math.PI / 2 + bgAngle / 2;
+      var cy = state.curveDown ? -radius : radius;
+
+      var alphaHex = Math.round(state.bgOpacity * 2.55).toString(16).padStart(2, '0');
+      ctx.fillStyle = state.bgColor + alphaHex;
+      ctx.beginPath();
+      if (state.curveDown) {
+        ctx.arc(0, cy, arcOuter, Math.PI - endA, Math.PI - startA);
+        ctx.arc(0, cy, arcInner, Math.PI - startA, Math.PI - endA, true);
+      } else {
+        ctx.arc(0, -cy, arcOuter, startA, endA);
+        ctx.arc(0, -cy, arcInner, endA, startA, true);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.font = fontStyle + fontSize + 'px ' + fontFamily;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = state.textOpacity / 100;
+
+    var startAngle = -totalAngle / 2;
+    var currentAngle = startAngle;
+
+    for (var j = 0; j < chars.length; j++) {
+      var charAngle = chars[j].w / radius;
+      var midAngle = currentAngle + charAngle / 2;
+
+      ctx.save();
+      if (state.curveDown) {
+        var drawAngle = Math.PI / 2 - midAngle;
+        ctx.rotate(drawAngle);
+        ctx.translate(0, radius);
+        ctx.rotate(Math.PI);
+      } else {
+        var drawAngle2 = -Math.PI / 2 + midAngle;
+        ctx.rotate(drawAngle2);
+        ctx.translate(0, -radius);
+      }
+
+      drawCharCurved(ctx, chars[j].ch, 0, 0, fontSize);
+      ctx.restore();
+
+      currentAngle += charAngle + letterSp / radius;
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function drawBg(ctx, x, y, w, h) {
+    var r = state.bgRadius * SCALE;
+    var alphaHex = Math.round(state.bgOpacity * 2.55).toString(16).padStart(2, '0');
+    ctx.fillStyle = state.bgColor + alphaHex;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+    ctx.fill();
+  }
+
+  function drawChar(ctx, char, x, y, fontSize) {
+    applyShadow(ctx);
+    if (state.stroke) {
+      ctx.strokeStyle = state.strokeColor;
+      ctx.lineWidth = state.strokeWidth * SCALE;
+      ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+      ctx.strokeText(char, x, y);
+    }
+    ctx.fillStyle = state.textColor;
+    ctx.fillText(char, x, y);
+    if (state.underline) {
+      var w = ctx.measureText(char).width;
+      ctx.fillRect(x, y + fontSize * 0.9, w, Math.max(2, fontSize * 0.05));
+    }
+    clearShadow(ctx);
+  }
+
+  function drawCharCurved(ctx, char, x, y, fontSize) {
+    applyShadow(ctx);
+    if (state.stroke) {
+      ctx.strokeStyle = state.strokeColor;
+      ctx.lineWidth = state.strokeWidth * SCALE;
+      ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+      ctx.strokeText(char, x, y);
+    }
+    ctx.fillStyle = state.textColor;
+    ctx.fillText(char, x, y);
+    clearShadow(ctx);
+  }
+
+  function applyShadow(ctx) {
     if (state.shadow) {
       ctx.shadowColor = state.shadowColor;
       ctx.shadowBlur = state.shadowBlur * SCALE;
       ctx.shadowOffsetX = state.shadowX * SCALE;
       ctx.shadowOffsetY = state.shadowY * SCALE;
     }
-    if (state.stroke) {
-      ctx.strokeStyle = state.strokeColor;
-      ctx.lineWidth = state.strokeWidth * SCALE;
-      ctx.lineJoin = 'round';
-      ctx.miterLimit = 2;
-      ctx.strokeText(char, x, y);
-    }
-    ctx.fillStyle = state.textColor;
-    ctx.fillText(char, x, y);
+  }
+  function clearShadow(ctx) {
     ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
   }
 
   // Export
@@ -628,12 +795,27 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
 
     var hint = document.createElement('div');
     hint.className = 'save-hint';
-    hint.textContent = '長按上方圖片 → 儲存到相簿 → IG 限動用「貼圖」貼上';
+    hint.textContent = '\u9577\u6309\u4e0a\u65b9\u5716\u7247 \u2192 \u5132\u5b58\u5230\u76f8\u7c3f \u2192 IG \u9650\u52d5\u7528\u300c\u8cbc\u5716\u300d\u8cbc\u4e0a';
     result.appendChild(hint);
   });
 
-  // Initial render
-  render();
+  // Preload built-in fonts then render
+  var preloadText = document.createElement('div');
+  preloadText.style.cssText = 'position:absolute;left:-9999px;font-size:1px;';
+  BUILTIN_FONTS.forEach(function(f) {
+    var span = document.createElement('span');
+    span.style.fontFamily = f.id;
+    span.textContent = '\u6e2c';
+    preloadText.appendChild(span);
+  });
+  document.body.appendChild(preloadText);
+
+  // Wait for fonts to load
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function() { render(); });
+  }
+  setTimeout(render, 500);
+  setTimeout(render, 2000);
 })();
 </script>
 </body>
