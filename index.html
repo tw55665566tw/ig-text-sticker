@@ -952,13 +952,22 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
     ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
   }
 
-  // Export
+  // Export - works on iOS Safari
   document.getElementById('exportBtn').addEventListener('click', function() {
     var canvas = document.getElementById('previewCanvas');
-    var dataUrl = canvas.toDataURL('image/png');
     var result = document.getElementById('exportResult');
     while (result.firstChild) result.removeChild(result.firstChild);
 
+    // Method 1: Download link (works on desktop + some mobile)
+    var dataUrl = canvas.toDataURL('image/png');
+    var downloadLink = document.createElement('a');
+    downloadLink.href = dataUrl;
+    downloadLink.download = 'ig-sticker-' + Date.now() + '.png';
+    downloadLink.textContent = '點擊下載圖片';
+    downloadLink.style.cssText = 'display:block;text-align:center;padding:14px;background:#4ade80;color:#000;border-radius:8px;font-size:16px;font-weight:600;text-decoration:none;margin-top:12px;';
+    result.appendChild(downloadLink);
+
+    // Method 2: Show image for long-press save (iOS fallback)
     var img = document.createElement('img');
     img.id = 'savedImage';
     img.src = dataUrl;
@@ -966,27 +975,53 @@ input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6p
 
     var hint = document.createElement('div');
     hint.className = 'save-hint';
-    hint.textContent = '\u9577\u6309\u4e0a\u65b9\u5716\u7247 \u2192 \u5132\u5b58\u5230\u76f8\u7c3f \u2192 IG \u9650\u52d5\u7528\u300c\u8cbc\u5716\u300d\u8cbc\u4e0a';
+    hint.textContent = 'iOS: 長按上方圖片 → 加入照片 | 電腦: 點綠色按鈕下載';
     result.appendChild(hint);
+
+    // Method 3: Try native share (iOS Safari)
+    if (navigator.share && navigator.canShare) {
+      canvas.toBlob(function(blob) {
+        var file = new File([blob], 'ig-sticker.png', { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          var shareBtn = document.createElement('button');
+          shareBtn.textContent = '分享 / 儲存到相簿';
+          shareBtn.style.cssText = 'display:block;width:100%;padding:14px;background:linear-gradient(135deg,#38bdf8,#818cf8);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;';
+          shareBtn.addEventListener('click', function() {
+            navigator.share({ files: [file] }).catch(function(){});
+          });
+          result.insertBefore(shareBtn, img);
+        }
+      }, 'image/png');
+    }
   });
 
   // Preload built-in fonts then render
   var preloadText = document.createElement('div');
-  preloadText.style.cssText = 'position:absolute;left:-9999px;font-size:1px;';
+  preloadText.style.cssText = 'position:absolute;left:-9999px;font-size:12px;';
   BUILTIN_FONTS.forEach(function(f) {
     var span = document.createElement('span');
-    span.style.fontFamily = f.id;
-    span.textContent = '\u6e2c';
+    span.style.fontFamily = '"' + f.id + '"';
+    span.textContent = '測試字體預載';
     preloadText.appendChild(span);
   });
   document.body.appendChild(preloadText);
 
-  // Wait for fonts to load
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(function() { render(); });
+  // Wait for fonts to load, then render + update chips
+  function onFontsReady() {
+    // Update font chip previews with actual font
+    document.querySelectorAll('#builtinFontList .font-chip').forEach(function(chip) {
+      chip.style.fontFamily = '"' + chip.dataset.fontId + '", sans-serif';
+    });
+    render();
   }
-  setTimeout(render, 500);
-  setTimeout(render, 2000);
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(onFontsReady);
+  }
+  // Fallback renders in case fonts load slowly
+  setTimeout(onFontsReady, 1000);
+  setTimeout(onFontsReady, 3000);
+  setTimeout(onFontsReady, 6000);
   } // end initApp
 })();
 </script>
