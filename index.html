@@ -106,6 +106,12 @@ textarea:focus{outline:none;border-color:#818cf8}
   <textarea id="textInput" placeholder="輸入文字，Enter 換行...">水電維修找我們</textarea>
 </div>
 
+<!-- Action Bar -->
+<div style="flex-shrink:0;display:flex;gap:6px;padding:4px 12px;background:#0d1117;justify-content:flex-end">
+  <button id="undoBtn" style="padding:5px 14px;background:#1a1a2e;border:1px solid #334;border-radius:6px;color:#8899aa;font-size:12px;cursor:pointer">↩ 復原</button>
+  <button id="resetBtn" style="padding:5px 14px;background:#1a1a2e;border:1px solid #534;border-radius:6px;color:#f87171;font-size:12px;cursor:pointer">⟳ 重置</button>
+</div>
+
 <!-- Tab Bar -->
 <div id="tabBar">
   <div class="tab active" data-tab="font">字體</div>
@@ -237,7 +243,7 @@ textarea:focus{outline:none;border-color:#818cf8}
     {id:'twroadfont',name:'道路體'},{id:'mantou',name:'饅頭黑體'},{id:'biantao',name:'扁桃體'}
   ];
 
-  var state={
+  var DEFAULTS={
     fonts:[],activeFont:'jinxuan',text:'水電維修找我們',
     fontSize:64,lineHeight:130,letterSpacing:0,textColor:'#ffffff',textOpacity:100,
     align:'center',vertical:false,rotation:0,bold:false,italic:false,underline:false,strike:false,
@@ -248,6 +254,13 @@ textarea:focus{outline:none;border-color:#818cf8}
     charBg:false,charBgShape:'circle',charBgSize:130,charBgColor:'#FFD15B',charBgOpacity:100,
     bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20
   };
+  var state=JSON.parse(JSON.stringify(DEFAULTS));
+  state.fonts=[];
+
+  // Undo history
+  var history=[],maxHistory=30;
+  function saveHistory(){history.push(JSON.stringify(state));if(history.length>maxHistory)history.shift()}
+  function undo(){if(history.length<1)return;var prev=JSON.parse(history.pop());var fonts=state.fonts;Object.keys(prev).forEach(function(k){state[k]=prev[k]});state.fonts=fonts;syncUI();render()}
 
   var SCALE=4;
   var presets=['#ffffff','#000000','#f87171','#fb923c','#facc15','#4ade80','#38bdf8','#818cf8','#e879f9','#EABA28','#437FFF'];
@@ -331,20 +344,85 @@ textarea:focus{outline:none;border-color:#818cf8}
   });
 
   // Text input
-  document.getElementById('textInput').addEventListener('input',function(e){state.text=e.target.value;render()});
+  document.getElementById('textInput').addEventListener('input',function(e){saveHistory();state.text=e.target.value;render()});
+
+  // Save history before any change via range/color
+  document.querySelectorAll('input[type="range"]').forEach(function(e){e.addEventListener('pointerdown',function(){saveHistory()})});
+  document.querySelectorAll('input[type="color"]').forEach(function(e){e.addEventListener('pointerdown',function(){saveHistory()})});
+  document.querySelectorAll('.btn-s,.tog,.chip').forEach(function(e){e.addEventListener('pointerdown',function(){saveHistory()})});
+
+  // Undo & Reset
+  document.getElementById('undoBtn').addEventListener('click',undo);
+  document.getElementById('resetBtn').addEventListener('click',function(){
+    saveHistory();
+    var fonts=state.fonts;
+    Object.keys(DEFAULTS).forEach(function(k){state[k]=DEFAULTS[k]});
+    state.fonts=fonts;state.activeFont=DEFAULTS.activeFont;
+    document.getElementById('textInput').value=state.text;
+    syncUI();render();
+  });
+
+  // Sync all UI controls to match state
+  function syncUI(){
+    document.getElementById('textInput').value=state.text;
+    // Ranges
+    [['fontSize','px'],['lineHeight','%'],['letterSpacing','px'],['textOpacity','%'],['rotation','\u00b0'],
+     ['curveRadius',''],['strokeOutWidth','px'],['strokeInWidth','px'],
+     ['shadowAngle','\u00b0'],['shadowDist','px'],['shadowBlur','px'],['shadowOpacity','%'],
+     ['charBgSize','%'],['charBgOpacity','%'],['bgOpacity','%'],['bgRadius','px'],['bgPadding','px']
+    ].forEach(function(c){var e=document.getElementById(c[0]);if(e){e.value=state[c[0]];setText(c[0]+'Val',state[c[0]]+c[1])}});
+    // Colors
+    ['textColor','strokeOutColor','strokeInColor','shadowColor','charBgColor','bgColor'].forEach(function(id){var e=document.getElementById(id);if(e)e.value=state[id]});
+    // Toggles
+    [['strokeToggle','strokeControls','stroke'],['shadowToggle','shadowControls','shadow'],
+     ['bgToggle','bgControls','bg'],['curveToggle','curveControls','curve'],
+     ['charBgToggle','charBgControls','charBg']
+    ].forEach(function(t){document.getElementById(t[0]).classList.toggle('on',state[t[1]?t[2]:t[2]]);if(t[1])document.getElementById(t[1]).style.display=state[t[2]]?'block':'none'});
+    // Buttons
+    document.getElementById('boldBtn').classList.toggle('active',state.bold);
+    document.getElementById('italicBtn').classList.toggle('active',state.italic);
+    document.getElementById('underlineBtn').classList.toggle('active',state.underline);
+    document.getElementById('strikeBtn').classList.toggle('active',state.strike);
+    document.getElementById('flipHBtn').classList.toggle('active',state.flipH);
+    document.getElementById('flipVBtn').classList.toggle('active',state.flipV);
+    document.getElementById('horizBtn').classList.toggle('active',!state.vertical);
+    document.getElementById('vertBtn').classList.toggle('active',state.vertical);
+    document.getElementById('curveUpBtn').classList.toggle('active',!state.curveDown);
+    document.getElementById('curveDownBtn').classList.toggle('active',state.curveDown);
+    document.getElementById('charBgCircleBtn').classList.toggle('active',state.charBgShape==='circle');
+    document.getElementById('charBgSquareBtn').classList.toggle('active',state.charBgShape==='square');
+    document.querySelectorAll('[data-align]').forEach(function(b){b.classList.toggle('active',b.dataset.align===state.align)});
+    updChips();
+  }
 
   // === SAVE ===
   document.getElementById('saveBtn').addEventListener('click',function(){
     var canvas=document.getElementById('previewCanvas');
+    var btn=document.getElementById('saveBtn');
     canvas.toBlob(function(blob){
-      if(navigator.share&&navigator.canShare){
-        var file=new File([blob],'ig-sticker.png',{type:'image/png'});
-        if(navigator.canShare({files:[file]})){navigator.share({files:[file]}).catch(function(){});return}
+      // Try clipboard first (works on iOS 16.4+)
+      if(navigator.clipboard&&navigator.clipboard.write&&typeof ClipboardItem!=='undefined'){
+        try{
+          navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){
+            btn.textContent='✓ 已複製';btn.style.background='#22c55e';
+            setTimeout(function(){btn.textContent='儲存';btn.style.background=''},1500);
+          }).catch(function(){fallbackSave(blob)});return;
+        }catch(e){}
       }
-      var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='ig-sticker-'+Date.now()+'.png';
-      document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url)},1000);
+      fallbackSave(blob);
     },'image/png');
   });
+  function fallbackSave(blob){
+    var btn=document.getElementById('saveBtn');
+    if(navigator.share&&navigator.canShare){
+      var file=new File([blob],'ig-sticker.png',{type:'image/png'});
+      if(navigator.canShare({files:[file]})){navigator.share({files:[file]}).catch(function(){});
+        btn.textContent='✓ 已分享';setTimeout(function(){btn.textContent='儲存';btn.style.background=''},1500);return}
+    }
+    var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='ig-sticker-'+Date.now()+'.png';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url)},1000);
+    btn.textContent='✓ 已下載';setTimeout(function(){btn.textContent='儲存';btn.style.background=''},1500);
+  }
 
   // === RENDER ===
   function render(){
@@ -410,11 +488,11 @@ textarea:focus{outline:none;border-color:#818cf8}
     if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
     if(state.bg){var pad=state.bgPadding*SCALE,aO=radius+fz/2+pad,aI=radius-fz/2-pad,bA=tA+(pad*2)/radius,s1=-Math.PI/2-bA/2,e1=-Math.PI/2+bA/2,cy=state.curveDown?-radius:radius;
       var aH=Math.round(state.bgOpacity*2.55).toString(16).padStart(2,'0');ctx.fillStyle=state.bgColor+aH;ctx.beginPath();
-      if(state.curveDown){ctx.arc(0,cy,aO,Math.PI-e1,Math.PI-s1);ctx.arc(0,cy,aI,Math.PI-s1,Math.PI-e1,true)}else{ctx.arc(0,-cy,aO,s1,e1);ctx.arc(0,-cy,aI,e1,s1,true)}ctx.closePath();ctx.fill()}
+      if(!state.curveDown){ctx.arc(0,cy,aO,Math.PI-e1,Math.PI-s1);ctx.arc(0,cy,aI,Math.PI-s1,Math.PI-e1,true)}else{ctx.arc(0,-cy,aO,s1,e1);ctx.arc(0,-cy,aI,e1,s1,true)}ctx.closePath();ctx.fill()}
     ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.textAlign='center';ctx.globalAlpha=state.textOpacity/100;
     var sa=-tA/2,ca=sa;
     for(var j=0;j<chars.length;j++){var chA=chars[j].w/radius,ma=ca+chA/2;ctx.save();
-      if(state.curveDown){ctx.rotate(Math.PI/2-ma);ctx.translate(0,radius);ctx.rotate(Math.PI)}else{ctx.rotate(-Math.PI/2+ma);ctx.translate(0,-radius)}
+      if(!state.curveDown){ctx.rotate(Math.PI/2-ma);ctx.translate(0,radius);ctx.rotate(Math.PI)}else{ctx.rotate(-Math.PI/2+ma);ctx.translate(0,-radius)}
       drawCharC(ctx,chars[j].ch,0,0,fz);ctx.restore();ca+=chA+ls/radius}
     ctx.globalAlpha=1;ctx.restore();
     requestAnimationFrame(positionResizeBox);
