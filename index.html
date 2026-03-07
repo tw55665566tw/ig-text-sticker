@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>IG 文字貼紙產生器</title>
 <style>
 @font-face { font-family: 'jinxuan'; src: url('fonts/jinxuan-bold.woff2') format('woff2'); }
@@ -36,8 +39,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;
 .hb-btn.danger{color:#f87171;border-color:#534}
 .hb-btn.save{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border:none;font-weight:600}
 
-/* Preview - fixed square */
-#previewArea{flex-shrink:0;width:100%;aspect-ratio:1/1;max-height:42vh;background:#2a2a2a;display:flex;align-items:center;justify-content:center;padding:8px;position:relative;overflow:hidden;margin:0 auto}
+/* Preview - compact square */
+#previewArea{flex-shrink:1;width:100%;height:30vh;max-height:280px;background:#2a2a2a;display:flex;align-items:center;justify-content:center;padding:8px;position:relative;overflow:hidden;margin:0 auto}
 #previewCanvas{max-width:100%;max-height:100%;position:relative}
 #resizeBox{position:absolute;border:1.5px dashed rgba(129,140,248,.7);pointer-events:none;display:none;cursor:move}
 #resizeBox .rz-drag{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:auto;touch-action:none;cursor:move;z-index:1}
@@ -58,7 +61,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1a2e;
 .tool-item.active .t-icon,.tool-item.active .t-label{color:#818cf8}
 
 /* Panel */
-#panelArea{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;background:#111827;border-top:1px solid #1e2a4a;display:none}
+#panelArea{flex:1 1 0%;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;background:#111827;border-top:1px solid #1e2a4a;display:none;touch-action:pan-y}
 
 /* Controls */
 .ctrl{display:flex;align-items:center;gap:10px;margin-bottom:12px;min-height:40px}
@@ -171,15 +174,12 @@ input[type="color"]{width:44px;height:40px;border:none;border-radius:8px;cursor:
 <script>
 // Prevent iOS rubber-band scrolling on the whole page
 document.addEventListener('touchmove',function(e){
-  var t=e.target,allow=false;
-  while(t&&t!==document.body){
-    if(t.tagName==='TEXTAREA'||t.tagName==='INPUT'||t.tagName==='SELECT'){allow=true;break}
-    var s=window.getComputedStyle(t);
-    if((s.overflowY==='auto'||s.overflowY==='scroll')&&t.scrollHeight>t.clientHeight){allow=true;break}
-    if((s.overflowX==='auto'||s.overflowX==='scroll')&&t.scrollWidth>t.clientWidth){allow=true;break}
-    t=t.parentElement;
-  }
-  if(!allow)e.preventDefault();
+  var el=e.target;
+  if(el.tagName==='TEXTAREA'||el.tagName==='INPUT'||el.tagName==='SELECT')return;
+  var pa=document.getElementById('panelArea');
+  var tb=document.getElementById('toolBar');
+  if((pa&&pa.contains(el))||(tb&&tb.contains(el)))return;
+  e.preventDefault();
 },{passive:false});
 (function(){
   var PASS_HASH='e242af95d49d290521a2b0730473a1b7e053d4b244e0189876569943bef840d1';
@@ -241,7 +241,7 @@ function initApp(){
     shadow:false,shadowAngle:45,shadowDist:4,shadowBlur:6,shadowOpacity:80,shadowColor:'#000000',
     neon:false,neonColor:'#818cf8',neonSize:15,neonIntensity:80,
     charBg:false,charBgShape:'circle',charBgSize:130,charBgColor:'#FFD15B',charBgOpacity:100,charBgRadius:8,charBgPadding:4,
-    bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20,
+    bg:false,bgColor:'#000000',bgOpacity:70,bgRadius:12,bgPadding:20,bgOffsetY:0,
     posX:0,posY:0
   };
   var state=JSON.parse(JSON.stringify(DEFAULTS));state.fonts=[];
@@ -260,7 +260,10 @@ function initApp(){
   function addRecentColor(c){c=c.toLowerCase();recentColors=recentColors.filter(function(x){return x!==c});recentColors.unshift(c);if(recentColors.length>12)recentColors.pop();try{localStorage.setItem('ig-stk-rc',JSON.stringify(recentColors))}catch(e){}}
 
   var SCALE=4;
-  var presets=['#ffffff','#000000','#f87171','#fb923c','#facc15','#4ade80','#38bdf8','#818cf8','#e879f9','#EABA28','#437FFF','#ff6ec7'];
+  var presets=[
+    '#ffffff','#000000','#FF0000','#FF6600','#FFDD00','#00E639','#00BBFF','#6644FF','#FF00CC','#FF3399','#00FFCC','#FFAA00',
+    '#C2B8A3','#A89F91','#D4C5B2','#B8A9C4','#A3B5C4','#C4A3A3','#8B9EAB','#C9B8D4','#D1C6B8','#A3C4B8','#D4B8C4','#B8C4A3'
+  ];
   function setText(id,t){var e=document.getElementById(id);if(e)e.textContent=t}
 
   // === TOOL BAR & PANELS ===
@@ -283,8 +286,10 @@ function initApp(){
     switch(tool){
     case 'font':
       h='<div class="sub-label">最近使用</div><div class="chips" id="recentFontList"></div>';
-      h+='<div class="font-tags" id="fontTags"></div>';
+      h+='<div style="border-top:1px solid #334;margin:10px 0"></div>';
+      h+='<div class="sub-label">字體分類</div><div class="font-tags" id="fontTags"></div>';
       h+='<div class="chips" id="builtinFontList"></div>';
+      h+='<div style="border-top:1px solid #334;margin:10px 0"></div>';
       h+='<div class="sub-label">上傳自訂字體</div><div class="font-up" id="fontUploadArea">+ TTF / OTF / WOFF2</div>';
       h+='<input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" multiple style="display:none">';
       h+='<div class="chips" id="customFontList"></div>';
@@ -367,6 +372,7 @@ function initApp(){
     case 'bg':
       h='<div class="tog-row"><span style="font-size:14px">啟用背景框</span><div class="tog'+(state.bg?' on':'')+'" id="bgToggle"></div></div>';
       h+='<div id="bgControls" style="display:'+(state.bg?'block':'none')+'">';
+      h+=mkRange('bgOffsetY','上下微調','px',-30,30);
       h+='<div class="ctrl"><span class="ctrl-label">顏色</span><input type="color" id="bgColor" value="'+state.bgColor+'"></div>';
       h+=mkRange('bgOpacity','透明度','%',0,100)+mkRange('bgRadius','圓角','px',0,40)+mkRange('bgPadding','內距','px',0,60);
       h+='</div>';
@@ -404,7 +410,7 @@ function initApp(){
       var units={fontSize:'px',lineHeight:'%',letterSpacing:'px',textOpacity:'%',rotation:'\u00b0',
         strokeOutWidth:'px',strokeInWidth:'px',shadowAngle:'\u00b0',shadowDist:'px',shadowBlur:'px',shadowOpacity:'%',
         neonSize:'px',neonIntensity:'%',charBgSize:'%',charBgRadius:'px',charBgPadding:'px',charBgOpacity:'%',
-        bgOpacity:'%',bgRadius:'px',bgPadding:'px',curveRadius:'',gradAngle:'\u00b0'};
+        bgOpacity:'%',bgRadius:'px',bgPadding:'px',bgOffsetY:'px',curveRadius:'',gradAngle:'\u00b0'};
       e.addEventListener('input',function(){state[id]=parseInt(e.value);setText(id+'Val',e.value+(units[id]||''));render()});
       e.addEventListener('pointerdown',function(){saveHistory()});
     });
@@ -703,7 +709,7 @@ function initApp(){
       var cs=fz*(state.lineHeight/100);cW=cs*lines.length;cH=fz*mc+ls*Math.max(0,mc-1);
     }else{
       var mW=0,lw=[];lines.forEach(function(l){var w=measureLine(ctx,l,ls);lw.push(w);if(w>mW)mW=w});
-      cW=mW;cH=lH*lines.length;
+      cW=mW;cH=lines.length>1?(lines.length-1)*lH+fz:fz;
     }
     var pad=state.bg?state.bgPadding*SCALE:0;
     var sE=state.stroke?Math.max(state.strokeOutWidth,state.strokeInWidth)*SCALE:0;
@@ -720,17 +726,21 @@ function initApp(){
     ctx.clearRect(0,0,cw,ch);ctx.save();ctx.translate(cw/2,ch/2);ctx.rotate(ang);
     if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
     ctx.translate(-iW/2,-iH/2);
-    var ox=ex,oy=ex;
-    if(state.bg)drawBg(ctx,ox-pad,oy-pad,cW+pad*2,cH+pad*2);
-    ctx.font=fs+fz+'px '+ff;ctx.textBaseline='top';ctx.globalAlpha=state.textOpacity/100;
+    var ox=ex+pad,oy=ex+pad;
+    if(state.bg)drawBg(ctx,ex,ex,cW+pad*2,cH+pad*2);
+    ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.globalAlpha=state.textOpacity/100;
+    // Measure actual glyph center offset + manual adjust
+    var vAdj=0;
+    try{var tm=ctx.measureText(lines[0]||'\u6e2c');if(tm.actualBoundingBoxAscent!==undefined)vAdj=(tm.actualBoundingBoxAscent-tm.actualBoundingBoxDescent)/2}catch(e){}
+    vAdj-=(state.bgOffsetY||0)*SCALE;
 
     if(state.vertical){
       var cs2=fz*(state.lineHeight/100);
-      lines.forEach(function(l,ci){var x=ox+cW-cs2*(ci+1)+(cs2-fz)/2;for(var i=0;i<l.length;i++){var cw2=ctx.measureText(l[i]).width;drawChar(ctx,l[i],x+(fz-cw2)/2,oy+i*(fz+ls),fz)}});
+      lines.forEach(function(l,ci){var x=ox+cW-cs2*(ci+1)+(cs2-fz)/2;for(var i=0;i<l.length;i++){var cw2=ctx.measureText(l[i]).width;drawChar(ctx,l[i],x+(fz-cw2)/2,oy+i*(fz+ls)+fz/2-vAdj,fz)}});
     }else{
       var lw2=[],mW2=0;lines.forEach(function(l){var w=measureLine(ctx,l,ls);lw2.push(w);if(w>mW2)mW2=w});
       lines.forEach(function(l,i){
-        var y=oy+i*lH;
+        var y=oy+i*lH+fz/2-vAdj;
         if(state.align==='justify'&&l.length>1){
           var totalW=0;for(var j=0;j<l.length;j++)totalW+=ctx.measureText(l[j]).width;
           var gap=(cW-totalW)/(l.length-1),cx2=ox;
@@ -762,26 +772,47 @@ function initApp(){
     canvas.width=fW;canvas.height=fH;var dw=Math.min(fW/SCALE,340);canvas.style.width=dw+'px';canvas.style.height=(fH/SCALE)*(dw/(fW/SCALE))+'px';
     ctx.clearRect(0,0,fW,fH);ctx.save();ctx.translate(fW/2,fH/2);ctx.rotate(ang);
     if(state.flipH)ctx.scale(-1,1);if(state.flipV)ctx.scale(1,-1);
-    if(state.bg){var pad=state.bgPadding*SCALE,aO=radius+fz/2+pad,aI=radius-fz/2-pad,bA=tA+(pad*2)/radius,s1=-Math.PI/2-bA/2,e1=-Math.PI/2+bA/2,cy=state.curveDown?-radius:radius;
-      var aH=Math.round(state.bgOpacity*2.55).toString(16).padStart(2,'0');ctx.fillStyle=state.bgColor+aH;ctx.beginPath();
-      if(!state.curveDown){ctx.arc(0,cy,aO,Math.PI-e1,Math.PI-s1);ctx.arc(0,cy,aI,Math.PI-s1,Math.PI-e1,true)}else{ctx.arc(0,-cy,aO,s1,e1);ctx.arc(0,-cy,aI,e1,s1,true)}ctx.closePath();ctx.fill()}
+    if(state.bg){var pad=state.bgPadding*SCALE,aO=radius+fz/2+pad,aI=radius-fz/2-pad,bA=tA+(pad*2)/radius;
+      ctx.fillStyle=hexToRgba(state.bgColor,state.bgOpacity);ctx.beginPath();
+      if(!state.curveDown){
+        // Upward: arc center at (0, radius)
+        var bs=-bA/2,be=bA/2;
+        ctx.arc(0,radius,aO,-Math.PI/2+bs,-Math.PI/2+be);ctx.arc(0,radius,aI,-Math.PI/2+be,-Math.PI/2+bs,true);
+      }else{
+        // Downward: arc center at (0, -radius)
+        var bs2=-bA/2,be2=bA/2;
+        ctx.arc(0,-radius,aO,Math.PI/2+bs2,Math.PI/2+be2);ctx.arc(0,-radius,aI,Math.PI/2+be2,Math.PI/2+bs2,true);
+      }
+      ctx.closePath();ctx.fill()}
     ctx.font=fs+fz+'px '+ff;ctx.textBaseline='middle';ctx.textAlign='center';ctx.globalAlpha=state.textOpacity/100;
     var sa=-tA/2,ca=sa;
     for(var j=0;j<chars.length;j++){var chA=chars[j].w/radius,ma=ca+chA/2;ctx.save();
-      if(!state.curveDown){ctx.rotate(Math.PI/2-ma);ctx.translate(0,radius);ctx.rotate(Math.PI)}else{ctx.rotate(-Math.PI/2+ma);ctx.translate(0,-radius)}
+      if(!state.curveDown){
+        // Upward curve (smile): center at (0, radius), chars on top
+        var px=radius*Math.sin(ma),py=radius-radius*Math.cos(ma);
+        ctx.translate(px,py);ctx.rotate(ma);
+      }else{
+        // Downward curve (frown): center at (0, -radius), chars on bottom
+        var px2=radius*Math.sin(ma),py2=-(radius-radius*Math.cos(ma));
+        ctx.translate(px2,py2);ctx.rotate(-ma);
+      }
       drawCharC(ctx,chars[j].ch,0,0,fz);ctx.restore();ca+=chA+ls/radius}
     ctx.globalAlpha=1;ctx.restore();requestAnimationFrame(positionResizeBox);
   }
 
+  function hexToRgba(hex,opacity){
+    var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    return 'rgba('+r+','+g+','+b+','+(opacity/100)+')';
+  }
   function drawBg(ctx,x,y,w,h){
-    var r=state.bgRadius*SCALE,a=Math.round(state.bgOpacity*2.55).toString(16).padStart(2,'0');ctx.fillStyle=state.bgColor+a;ctx.beginPath();
+    var r=state.bgRadius*SCALE;ctx.fillStyle=hexToRgba(state.bgColor,state.bgOpacity);ctx.beginPath();
     if(ctx.roundRect){ctx.roundRect(x,y,w,h,r)}else{ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}ctx.fill()
   }
 
   function drawCBg(ctx,x,y,fz,cw){
     if(!state.charBg)return;
-    var sz=fz*(state.charBgSize/100),pd=state.charBgPadding*SCALE,a=Math.round(state.charBgOpacity*2.55).toString(16).padStart(2,'0');
-    ctx.fillStyle=state.charBgColor+a;var cx=x+cw/2,cy=y+fz/2;
+    var sz=fz*(state.charBgSize/100),pd=state.charBgPadding*SCALE;
+    ctx.fillStyle=hexToRgba(state.charBgColor,state.charBgOpacity);var cx=x+cw/2,cy=y;
     if(state.charBgShape==='circle'){ctx.beginPath();ctx.arc(cx,cy,(sz+pd)/2,0,Math.PI*2);ctx.fill()}
     else if(state.charBgShape==='roundrect'){var rr=state.charBgRadius*SCALE,bw=sz+pd,bh=sz+pd;ctx.beginPath();
       if(ctx.roundRect){ctx.roundRect(cx-bw/2,cy-bh/2,bw,bh,rr)}else{ctx.rect(cx-bw/2,cy-bh/2,bw,bh)}ctx.fill()}
@@ -794,8 +825,8 @@ function initApp(){
     return state.textColor;
   }
 
-  function apSh(ctx){if(state.shadow){var a=state.shadowAngle*Math.PI/180,h=Math.round(state.shadowOpacity*2.55).toString(16).padStart(2,'0');
-    ctx.shadowColor=state.shadowColor+h;ctx.shadowBlur=state.shadowBlur*SCALE;ctx.shadowOffsetX=Math.cos(a)*state.shadowDist*SCALE;ctx.shadowOffsetY=Math.sin(a)*state.shadowDist*SCALE}}
+  function apSh(ctx){if(state.shadow){var a=state.shadowAngle*Math.PI/180;
+    ctx.shadowColor=hexToRgba(state.shadowColor,state.shadowOpacity);ctx.shadowBlur=state.shadowBlur*SCALE;ctx.shadowOffsetX=Math.cos(a)*state.shadowDist*SCALE;ctx.shadowOffsetY=Math.sin(a)*state.shadowDist*SCALE}}
   function clSh(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0}
 
   function apNeon(ctx,ch,x,y,fz,centered){
@@ -815,19 +846,20 @@ function initApp(){
   }
 
   function drawChar(ctx,ch,x,y,fz){
+    // y is vertical CENTER of the character (textBaseline='middle')
     var cw=ctx.measureText(ch).width;drawCBg(ctx,x,y,fz,cw);
     apNeon(ctx,ch,x,y,fz,false);apSh(ctx);
     if(state.stroke&&state.strokeOutWidth>0){ctx.strokeStyle=state.strokeOutColor;ctx.lineWidth=(state.strokeOutWidth*2+state.strokeInWidth*2)*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
     if(state.stroke&&state.strokeInWidth>0){ctx.strokeStyle=state.strokeInColor;ctx.lineWidth=state.strokeInWidth*2*SCALE;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeText(ch,x,y)}
     clSh(ctx);ctx.fillStyle=getFill(ctx,x,y,fz);ctx.fillText(ch,x,y);
-    if(state.underline)ctx.fillRect(x,y+fz*.9,cw,Math.max(2,fz*.05));
-    if(state.strike)ctx.fillRect(x,y+fz*.45,cw,Math.max(2,fz*.05));
+    if(state.underline)ctx.fillRect(x,y+fz*0.4,cw,Math.max(2,fz*.05));
+    if(state.strike)ctx.fillRect(x,y,cw,Math.max(2,fz*.05));
   }
 
   function drawCharC(ctx,ch,x,y,fz){
     var cw=ctx.measureText(ch).width;
-    if(state.charBg){var sz=fz*(state.charBgSize/100),pd=state.charBgPadding*SCALE,a=Math.round(state.charBgOpacity*2.55).toString(16).padStart(2,'0');
-      ctx.fillStyle=state.charBgColor+a;
+    if(state.charBg){var sz=fz*(state.charBgSize/100),pd=state.charBgPadding*SCALE;
+      ctx.fillStyle=hexToRgba(state.charBgColor,state.charBgOpacity);
       if(state.charBgShape==='circle'){ctx.beginPath();ctx.arc(x,y,(sz+pd)/2,0,Math.PI*2);ctx.fill()}
       else if(state.charBgShape==='roundrect'){var rr=state.charBgRadius*SCALE;ctx.beginPath();if(ctx.roundRect){ctx.roundRect(x-(sz+pd)/2,y-(sz+pd)/2,sz+pd,sz+pd,rr)}else{ctx.rect(x-(sz+pd)/2,y-(sz+pd)/2,sz+pd,sz+pd)}ctx.fill()}
       else{ctx.fillRect(x-(sz+pd)/2,y-(sz+pd)/2,sz+pd,sz+pd)}}
